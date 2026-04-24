@@ -1,6 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-industrial-950: #050505;
+  --color-industrial-900: #0a0a0a;
+  --color-industrial-800: #121212;
+  --color-industrial-700: #1a1a1a;
+  --color-industrial-600: #262626;
+  --color-industrial-500: #404040;
+  --color-siac-green: #00ff9d;
+  --color-siac-red: #ff4d4d;
+  --color-siac-orange: #ff9d00;
+  --color-siac-blue: #00d1ff;
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
 :root {
   color-scheme: dark;
