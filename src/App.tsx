@@ -74,12 +74,12 @@ const generateAlarms = (): Alarm[] => [
 ];
 
 const INITIAL_PINS: Pin[] = [
-  { id: 'p1', x: 20, y: 30, tipo: 'Cámara', estado: 'Armado', nombre: 'CAM-01' },
-  { id: 'p2', x: 45, y: 25, tipo: 'Infrarrojo', estado: 'Alarmado', nombre: 'INF-02' },
-  { id: 'p3', x: 70, y: 40, tipo: 'PIR', estado: 'Des-armado', nombre: 'PIR-05' },
-  { id: 'p4', x: 30, y: 65, tipo: 'GW', estado: 'Armado', nombre: 'GW-ALPHA' },
-  { id: 'p5', x: 60, y: 75, tipo: 'Activo', estado: 'Bloqueado', nombre: 'ACT-99' },
-  { id: 'p6', x: 85, y: 20, tipo: 'Cámara', estado: 'Apagado', nombre: 'CAM-08' },
+  { id: 'ZONA5_POLM1', x: 20, y: 30, tipo: 'Cámara', estado: 'Armado', nombre: 'CAM-01' },
+  { id: 'ZONA2_SENS4', x: 45, y: 25, tipo: 'Infrarrojo', estado: 'Alarmado', nombre: 'INF-02' },
+  { id: 'ZONA8_PIR9', x: 70, y: 40, tipo: 'PIR', estado: 'Des-armado', nombre: 'PIR-05' },
+  { id: 'GW_MASTER_01', x: 30, y: 65, tipo: 'GW', estado: 'Armado', nombre: 'GW-ALPHA' },
+  { id: 'ACT_VALVE_22', x: 60, y: 75, tipo: 'Activo', estado: 'Bloqueado', nombre: 'ACT-99' },
+  { id: 'ZONA1_CAM08', x: 85, y: 20, tipo: 'Cámara', estado: 'Apagado', nombre: 'CAM-08' },
 ];
 
 // --- Components ---
@@ -89,10 +89,10 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
     <div className="min-h-screen bg-industrial-950 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background patterns */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-siac-green/20 via-transparent to-transparent" />
-        <div className="grid grid-cols-12 h-full w-full border-siac-green/5 border">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-siac-armed/20 via-transparent to-transparent" />
+        <div className="grid grid-cols-12 h-full w-full border-siac-armed/5 border">
           {Array.from({ length: 144 }).map((_, i) => (
-            <div key={i} className="border-siac-green/5 border" />
+            <div key={i} className="border-siac-armed/5 border" />
           ))}
         </div>
       </div>
@@ -190,49 +190,52 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
       onClick={onClick}
       className={cn(
         "bg-industrial-900 border p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
-        active ? "border-siac-green ring-1 ring-siac-green/50" : "border-industrial-700 hover:border-industrial-600"
+        active ? "border-siac-armed ring-1 ring-siac-armed/50" : "border-white/5 hover:border-white/10"
       )}
     >
       <div className={cn(
         "absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 pointer-events-none transition-colors",
-        kpi.status === 'ALERTA' ? "bg-siac-red" : kpi.status === 'AVISO' ? "bg-siac-orange" : "bg-siac-green"
+        kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
       )} />
       
       <div className="flex justify-between items-start mb-4">
         <div className={cn(
-          "p-2 rounded-lg",
-          kpi.status === 'ALERTA' ? "bg-siac-red/10 text-siac-red" : kpi.status === 'AVISO' ? "bg-siac-orange/10 text-siac-orange" : "bg-siac-green/10 text-siac-green"
+          "p-2.5 rounded-xl border border-white/5",
+          kpi.status === 'ALERTA' ? "bg-siac-blocked/10 text-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed/10 text-siac-disarmed" : "bg-siac-armed/10 text-siac-armed"
         )}>
-          <Icon className="w-5 h-5" />
+          <Icon className="w-6 h-6" />
         </div>
         <div className="flex flex-col items-end">
-          <div className="text-2xl font-mono font-bold leading-none">
+          <div className="text-2xl font-mono font-bold leading-none tracking-tight">
             {kpi.value}<span className="text-gray-600 text-sm">/{kpi.total}</span>
           </div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Activos</div>
+          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Sistemas</div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="text-sm font-bold text-gray-400 uppercase tracking-tight">{kpi.label}</div>
-        <div className="h-1.5 bg-industrial-800 rounded-full overflow-hidden">
+      <div className="space-y-3">
+        <div className="text-sm font-bold text-gray-300 uppercase tracking-tight">{kpi.label}</div>
+        
+        {/* State Bar */}
+        <div className="h-1.5 bg-industrial-800 rounded-full overflow-hidden border border-white/5">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${(kpi.value / kpi.total) * 100}%` }}
             className={cn(
-              "h-full rounded-full",
-              kpi.status === 'ALERTA' ? "bg-siac-red" : kpi.status === 'AVISO' ? "bg-siac-orange" : "bg-siac-green"
+              "h-full rounded-full transition-colors duration-500",
+              kpi.id === 'Cámara' 
+                ? (kpi.value === kpi.total ? "bg-siac-armed" : "bg-siac-disarmed")
+                : (kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed")
             )}
           />
         </div>
+        
         <div className="flex justify-between items-center">
-          <span className="text-[10px] text-gray-500 font-mono">{Math.round((kpi.value / kpi.total) * 100)}% operativo</span>
-          <span className={cn(
-            "text-[10px] font-bold px-1.5 py-0.5 rounded",
-            kpi.status === 'ALERTA' ? "bg-siac-red/20 text-siac-red" : kpi.status === 'AVISO' ? "bg-siac-orange/20 text-siac-orange" : "bg-siac-green/20 text-siac-green"
-          )}>
-            {kpi.status}
-          </span>
+          <span className="text-[10px] text-gray-500 font-mono font-medium">{Math.round((kpi.value / kpi.total) * 100)}% OPERATIVO</span>
+          <div className={cn(
+            "w-2 h-2 rounded-full animate-pulse",
+            kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
+          )} />
         </div>
       </div>
     </motion.div>
@@ -274,11 +277,11 @@ const Dashboard = () => {
   }, [alarms, activeFilter]);
 
   const kpis: KPI[] = [
-    { id: 'Cámara', label: 'Cámaras', icon: Camera, value: 12, total: 13, status: 'AVISO', color: 'siac-orange' },
-    { id: 'Infrarrojo', label: 'Infrarrojos', icon: Thermometer, value: 9, total: 12, status: 'ALERTA', color: 'siac-red' },
-    { id: 'PIR', label: 'PIR', icon: Radio, value: 12, total: 13, status: 'AVISO', color: 'siac-orange' },
-    { id: 'GW', label: 'GW', icon: Cpu, value: 11, total: 11, status: 'OK', color: 'siac-green' },
-    { id: 'Activo', label: 'Activos', icon: Activity, value: 13, total: 13, status: 'OK', color: 'siac-green' },
+    { id: 'Cámara', label: 'Cámaras', icon: Camera, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed' },
+    { id: 'Infrarrojo', label: 'Infrarrojos', icon: Thermometer, value: 9, total: 12, status: 'ALERTA', color: 'siac-blocked' },
+    { id: 'PIR', label: 'PIR', icon: Radio, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed' },
+    { id: 'GW', label: 'GW', icon: Cpu, value: 11, total: 11, status: 'OK', color: 'siac-armed' },
+    { id: 'Activo', label: 'Activos', icon: Activity, value: 13, total: 13, status: 'OK', color: 'siac-armed' },
   ];
 
   return (
@@ -325,7 +328,7 @@ const Dashboard = () => {
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all relative">
             <Bell className="w-5 h-5" /> Alarmas
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 bg-siac-red text-white text-[10px] flex items-center justify-center rounded-full font-bold">7</span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 bg-siac-blocked text-white text-[10px] flex items-center justify-center rounded-full font-bold">7</span>
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
             <Activity className="w-5 h-5" /> Seguimiento
@@ -341,7 +344,7 @@ const Dashboard = () => {
         <div className="p-4 border-t border-industrial-800">
           <button 
             onClick={() => window.location.reload()}
-            className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-siac-red hover:bg-siac-red/5 rounded-lg font-medium transition-all group"
+            className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-siac-blocked hover:bg-siac-blocked/5 rounded-lg font-medium transition-all group"
           >
             <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Cerrar sesión
           </button>
@@ -380,7 +383,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-2 md:gap-3">
               <div className="relative">
                 <Bell className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white transition-colors" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-siac-red rounded-full" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-siac-blocked rounded-full" />
               </div>
               <div className="w-px h-6 bg-industrial-700 mx-1 md:mx-2" />
               <div className="flex items-center gap-2 md:gap-3 bg-industrial-800/50 p-1 rounded-full border border-industrial-700">
@@ -420,10 +423,30 @@ const Dashboard = () => {
                 </button>
               </div>
               
-              <div className="aspect-video bg-industrial-900 rounded-2xl border border-industrial-800 relative overflow-hidden group">
-                {/* Simulated Grid/Map Background */}
-                <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(0,255,157,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,157,0.05)_1px,transparent_1px)] bg-[size:20px_20px] md:bg-[size:40px_40px]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(10,10,10,0.8)_100%)]" />
+              <div className="aspect-video bg-industrial-900 rounded-2xl border border-white/5 relative overflow-hidden group">
+                {/* Blueprint / Technical Grid Background */}
+                <div className="absolute inset-0 opacity-20 pointer-events-none" 
+                  style={{ 
+                    backgroundImage: `
+                      linear-gradient(to right, #4f4f4f 1px, transparent 1px),
+                      linear-gradient(to bottom, #4f4f4f 1px, transparent 1px)
+                    `,
+                    backgroundSize: '40px 40px'
+                  }} 
+                />
+                <div className="absolute inset-0 opacity-10 pointer-events-none" 
+                  style={{ 
+                    backgroundImage: `
+                      linear-gradient(to right, #4f4f4f 1px, transparent 1px),
+                      linear-gradient(to bottom, #4f4f4f 1px, transparent 1px)
+                    `,
+                    backgroundSize: '8px 8px'
+                  }} 
+                />
+                
+                {/* Minimal Dark Map Texture */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(22,29,49,0.4)_100%)]" />
                 
                 {/* Map Pins */}
                 <AnimatePresence>
@@ -433,40 +456,85 @@ const Dashboard = () => {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+                      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 group/pin"
                       onClick={() => setSelectedPin(pin)}
                     >
+                      {/* Tooltip with Framer Motion */}
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        whileHover={{ opacity: 1, y: -5, scale: 1 }}
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-2.5 py-1.5 bg-industrial-950/95 backdrop-blur-md border border-white/10 rounded-lg text-[10px] font-mono text-white whitespace-nowrap pointer-events-none z-50 shadow-2xl opacity-0 transition-opacity"
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="font-bold text-siac-armed">{pin.nombre}</span>
+                          <span className="text-gray-400 text-[8px] uppercase tracking-tighter">ID: {pin.id}</span>
+                        </div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-industrial-950/95" />
+                      </motion.div>
+
                       <motion.div 
                         className={cn(
-                          "w-4 h-4 md:w-6 md:h-6 rounded-full flex items-center justify-center shadow-lg transition-all",
-                          pin.estado === 'Alarmado' ? "bg-siac-red animate-pulse ring-2 md:ring-4 ring-siac-red/30" : 
-                          pin.estado === 'Armado' ? "bg-siac-green ring-2 md:ring-4 ring-siac-green/30" : 
-                          pin.estado === 'Des-armado' ? "bg-siac-orange ring-2 md:ring-4 ring-siac-orange/30" : 
-                          "bg-gray-600 ring-2 md:ring-4 ring-gray-600/30"
+                          "w-4 h-4 md:w-6 md:h-6 rounded-full flex items-center justify-center shadow-lg transition-all relative",
+                          pin.estado === 'Alarmado' ? "bg-siac-alarmed ring-2 md:ring-4 ring-siac-alarmed/30" : 
+                          pin.estado === 'Armado' ? "bg-siac-armed ring-2 md:ring-4 ring-siac-armed/30" : 
+                          pin.estado === 'Des-armado' ? "bg-siac-disarmed ring-2 md:ring-4 ring-siac-disarmed/30" : 
+                          "bg-siac-off ring-2 md:ring-4 ring-siac-off/30"
                         )}
-                        whileHover={{ scale: 1.5 }}
+                        whileHover={{ scale: 1.3 }}
                       >
+                        {/* Status Ping Animation for Active/Alarmed states */}
+                        {(pin.estado === 'Alarmado' || pin.estado === 'Armado') && (
+                          <div className={cn(
+                            "absolute inset-0 rounded-full animate-ping opacity-40",
+                            pin.estado === 'Alarmado' ? "bg-siac-alarmed" : "bg-siac-armed"
+                          )} />
+                        )}
+
                         {pin.tipo === 'Cámara' && <Camera className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
                         {pin.tipo === 'Infrarrojo' && <Thermometer className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
                         {pin.tipo === 'PIR' && <Radio className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
                         {pin.tipo === 'GW' && <Cpu className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
                         {pin.tipo === 'Activo' && <Activity className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
                       </motion.div>
-                      <div className="hidden md:block mt-2 whitespace-nowrap bg-industrial-950/80 backdrop-blur px-2 py-0.5 rounded text-[10px] font-mono border border-industrial-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {pin.nombre}
-                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
 
-                {/* Legend - Hidden on very small screens */}
-                <div className="hidden sm:block absolute bottom-4 right-4 md:bottom-6 md:right-6 bg-industrial-950/80 backdrop-blur-md p-3 md:p-4 rounded-xl border border-industrial-800 text-[8px] md:text-[10px] space-y-1 md:space-y-2 z-20">
-                  <div className="font-bold text-gray-500 uppercase tracking-widest mb-1 md:mb-2">Leyenda</div>
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-500" /> Apagado</div>
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-siac-green" /> Armado</div>
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-siac-orange" /> Des-armado</div>
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-siac-red" /> Alarmado</div>
-                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-siac-blue" /> Bloqueado</div>
+                {/* Map Legend */}
+                <div className="hidden sm:block absolute bottom-4 left-4 bg-industrial-950/90 backdrop-blur-md p-3 md:p-4 rounded-xl border border-white/5 shadow-2xl z-20">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <div className="w-1 h-3 bg-siac-armed rounded-full" />
+                    LEYENDA
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {[
+                      { label: 'Apagado', color: 'bg-siac-off' },
+                      { label: 'Armado', color: 'bg-siac-armed' },
+                      { label: 'Activo', color: 'bg-siac-active' },
+                      { label: 'Desarmado', color: 'bg-siac-disarmed' },
+                      { label: 'Alarmado', color: 'bg-siac-alarmed' },
+                      { label: 'Bloqueado', color: 'bg-siac-blocked' },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        <div className={cn("w-2 h-2 rounded-full", item.color)} />
+                        <span className="text-[10px] font-medium text-gray-300">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Map Controls */}
+                <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+                  <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                  <div className="w-px h-4 bg-white/5 mx-auto" />
+                  <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                    <Minus className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {/* Selected Pin Info */}
@@ -488,7 +556,7 @@ const Dashboard = () => {
                         <div className="space-y-2">
                           <div className={cn(
                             "w-12 h-12 rounded-xl flex items-center justify-center",
-                            selectedPin.estado === 'Alarmado' ? "bg-siac-red/20 text-siac-red" : "bg-siac-green/20 text-siac-green"
+                            selectedPin.estado === 'Alarmado' ? "bg-siac-alarmed/20 text-siac-alarmed" : "bg-siac-armed/20 text-siac-armed"
                           )}>
                             <Activity className="w-6 h-6" />
                           </div>
@@ -526,137 +594,130 @@ const Dashboard = () => {
               <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-siac-green" /> Instalaciones
               </h3>
-              <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
-                <div className="p-4 border-b border-industrial-800 bg-industrial-800/30">
-                  <div className="grid grid-cols-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                    <span>Nombre</span>
-                    <span className="text-center">Estado</span>
-                    <span className="text-right">Último Dato</span>
-                  </div>
+              <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
+                <div className="p-4 border-b border-white/5 bg-industrial-800/30">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {['Zona Norte', 'Zona Sur', 'Zona Este', 'Zona Oeste'].map((zona, i) => (
-                    <div key={zona} className="p-4 border-b border-industrial-800 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
-                      <div className="font-medium truncate">{zona}</div>
+                  {['ZONA A-1', 'ZONA B-2', 'ZONA C-3', 'ZONA D-4', 'ZONA E-5'].map((zona, i) => (
+                    <div key={zona} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
+                      <span className="font-mono text-xs">{zona}</span>
                       <div className="flex justify-center">
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                          i === 1 ? "bg-siac-red/10 text-siac-red border border-siac-red/20" : "bg-siac-green/10 text-siac-green border border-siac-green/20"
+                        <div className={cn(
+                          "px-2 py-0.5 rounded text-[10px] font-bold",
+                          i === 1 ? "bg-siac-blocked/10 text-siac-blocked border border-siac-blocked/20" : "bg-siac-armed/10 text-siac-armed border border-siac-armed/20"
                         )}>
-                          {i === 1 ? 'Alarmado' : 'Activo'}
-                        </span>
+                          {i === 1 ? 'ALERTA' : 'OK'}
+                        </div>
                       </div>
-                      <div className="text-right text-gray-500 font-mono text-xs">23-08-2024</div>
+                      <span className="text-right text-[10px] text-gray-500 font-mono">12:4{i} PM</span>
                     </div>
                   ))}
                 </div>
-                <div className="p-4 bg-industrial-800/20 border-t border-industrial-800 flex justify-between items-center text-xs shrink-0">
-                  <span className="text-gray-500">1-4 de 4</span>
-                  <div className="flex gap-2">
-                    <button className="w-6 h-6 rounded bg-industrial-800 flex items-center justify-center text-gray-500 hover:text-white">1</button>
-                    <button className="w-6 h-6 rounded hover:bg-industrial-800 flex items-center justify-center text-gray-500 hover:text-white">2</button>
+                <div className="p-4 bg-industrial-800/20 border-t border-white/5 flex justify-between items-center text-xs shrink-0">
+                  <span className="text-gray-500">Total: 24 zonas</span>
+                  <div className="flex gap-1">
+                    <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">1</button>
+                    <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">2</button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Alarm Console */}
-          <div className="space-y-4 pb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-siac-red" /> Listado de Alarmas
-                <span className="bg-siac-red/10 text-siac-red px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono">{filteredAlarms.length} eventos</span>
-              </h3>
-              <div className="flex items-center gap-2 md:gap-4">
-                <div className="relative flex-1 sm:flex-initial">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input 
-                    type="text" 
-                    placeholder="Escribe algo..." 
-                    className="w-full bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green sm:w-48 lg:w-64"
-                  />
-                </div>
-                <button className="bg-siac-green text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
-                  BUSCAR
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-              <div className="p-4 bg-industrial-800/30 border-b border-industrial-800 flex gap-2 overflow-x-auto scrollbar-hide">
-                {['Todos', 'Cámara', 'Infrarrojo', 'PIR', 'GW', 'Activo'].map(filter => (
-                  <button 
-                    key={filter}
-                    onClick={() => setActiveFilter(filter as any)}
-                    className={cn(
-                      "px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all border shrink-0",
-                      activeFilter === filter 
-                        ? "bg-siac-green text-industrial-950 border-siac-green" 
-                        : "bg-industrial-800 text-gray-400 border-industrial-700 hover:border-gray-600"
-                    )}
-                  >
-                    {filter === 'Todos' ? filter : filter + 's'}
+            {/* Alarms Table */}
+            <div className="xl:col-span-3 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-siac-blocked" /> Listado de Alarmas
+                  <span className="bg-siac-blocked/10 text-siac-blocked px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono">{filteredAlarms.length} eventos</span>
+                </h3>
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input 
+                      type="text" 
+                      placeholder="Buscar evento..." 
+                      className="w-full bg-industrial-900 border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-armed sm:w-48 lg:w-64"
+                    />
+                  </div>
+                  <button className="bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
+                    Exportar
                   </button>
-                ))}
+                </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left min-w-[800px]">
-                  <thead>
-                    <tr className="border-b border-industrial-800 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      <th className="px-6 py-4">Fecha</th>
-                      <th className="px-6 py-4">Estado</th>
-                      <th className="px-6 py-4">Dispositivo</th>
-                      <th className="px-6 py-4">Tipo</th>
-                      <th className="px-6 py-4">Ubicación</th>
-                      <th className="px-6 py-4">Descripción</th>
-                      <th className="px-6 py-4 text-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <AnimatePresence mode='popLayout'>
+
+              <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden">
+                <div className="p-4 bg-industrial-800/30 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide">
+                  {['Todos', 'Cámara', 'Infrarrojo', 'PIR', 'GW', 'Activo'].map((f) => (
+                    <button 
+                      key={f}
+                      onClick={() => setActiveFilter(f as any)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border",
+                        activeFilter === f 
+                          ? "bg-siac-armed text-industrial-950 border-siac-armed" 
+                          : "bg-industrial-800 text-gray-400 border-white/5 hover:border-gray-600"
+                      )}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        <th className="px-6 py-4">Evento ID</th>
+                        <th className="px-6 py-4">Fecha / Hora</th>
+                        <th className="px-6 py-4">Dispositivo</th>
+                        <th className="px-6 py-4 text-center">Estado</th>
+                        <th className="px-6 py-4">Ubicación</th>
+                        <th className="px-6 py-4">Descripción</th>
+                        <th className="px-6 py-4"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-xs">
                       {filteredAlarms.map((alarm) => (
-                        <motion.tr 
-                          key={alarm.id}
-                          layout
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="border-b border-industrial-800 hover:bg-industrial-800/30 transition-colors group"
+                        <tr 
+                          key={alarm.id} 
+                          className="border-b border-white/5 hover:bg-white/5 transition-colors group"
                         >
-                          <td className="px-6 py-4 text-xs font-mono text-gray-400">{alarm.fecha}</td>
+                          <td className="px-6 py-4 font-mono text-gray-400">#EV-{alarm.id}024</td>
+                          <td className="px-6 py-4 text-gray-300">{alarm.fecha}</td>
                           <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 bg-industrial-800 rounded-lg border border-white/5">
+                                {alarm.tipo === 'Cámara' && <Camera className="w-3 h-3" />}
+                                {alarm.tipo === 'Infrarrojo' && <Thermometer className="w-3 h-3" />}
+                                {alarm.tipo === 'PIR' && <Radio className="w-3 h-3" />}
+                                {alarm.tipo === 'GW' && <Cpu className="w-3 h-3" />}
+                                {alarm.tipo === 'Activo' && <Activity className="w-3 h-3" />}
+                              </div>
+                              <span className="font-bold">{alarm.dispositivo}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
                             <span className={cn(
                               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border",
                               alarm.estado === 'RESUELTO' 
-                                ? "bg-siac-green/10 text-siac-green border-siac-green/20" 
-                                : "bg-siac-orange/10 text-siac-orange border-siac-orange/20"
+                                ? "bg-siac-armed/10 text-siac-armed border-siac-armed/20" 
+                                : "bg-siac-disarmed/10 text-siac-disarmed border-siac-disarmed/20"
                             )}>
                               {alarm.estado === 'RESUELTO' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                               {alarm.estado}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm font-bold">{alarm.dispositivo}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              {alarm.tipo === 'Cámara' && <Camera className="w-3.5 h-3.5" />}
-                              {alarm.tipo === 'Infrarrojo' && <Thermometer className="w-3.5 h-3.5" />}
-                              {alarm.tipo === 'PIR' && <Radio className="w-3.5 h-3.5" />}
-                              {alarm.tipo === 'GW' && <Cpu className="w-3.5 h-3.5" />}
-                              {alarm.tipo === 'Activo' && <Activity className="w-3.5 h-3.5" />}
-                              {alarm.tipo}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-xs font-medium">{alarm.ubicacion}</td>
-                          <td className="px-6 py-4 text-xs text-gray-500">{alarm.descripcion}</td>
+                          <td className="px-6 py-4 text-gray-400">{alarm.ubicacion}</td>
+                          <td className="px-6 py-4 text-gray-300 italic">"{alarm.descripcion}"</td>
                           <td className="px-6 py-4 text-right">
-                            <button className="text-siac-green text-[10px] font-bold hover:underline">Ver</button>
+                            <button className="text-siac-armed text-[10px] font-bold hover:underline">Ver</button>
                           </td>
-                        </motion.tr>
+                        </tr>
                       ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

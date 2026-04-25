@@ -8,17 +8,24 @@ export default {
     extend: {
       colors: {
         industrial: {
-          950: '#050505',
-          900: '#0a0a0a',
+          950: '#161D31',
+          900: '#283046',
           800: '#121212',
           700: '#1a1a1a',
           600: '#262626',
         },
         siac: {
-          green: '#00ff9d',
-          red: '#ff4d4d',
-          orange: '#ff9d00',
-          blue: '#00d1ff',
+          armed: '#0B986A',
+          active: '#4DC493',
+          disarmed: '#D89A1E',
+          alarmed: '#FAD92A',
+          blocked: '#F51E1E',
+          off: '#4A4949',
+          // Compatibility aliases for existing components
+          green: '#0B986A',
+          red: '#F51E1E',
+          orange: '#D89A1E',
+          blue: '#4DC493',
         }
       },
       animation: {
