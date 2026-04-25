@@ -20,7 +20,11 @@ import {
   Activity,
   Maximize2,
   Menu,
-  X
+  X,
+  FileText,
+  Moon,
+  ChevronLeft,
+  ChevronRight as ChevronRightIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -260,6 +264,7 @@ const Dashboard = () => {
   }, []);
 
   const filteredAlarms = useMemo(() => {
+    if (!alarms) return [];
     if (activeFilter === 'Todos') return alarms;
     return alarms.filter(a => a.tipo === activeFilter);
   }, [alarms, activeFilter]);
@@ -467,7 +472,7 @@ const Dashboard = () => {
                 
                 {/* Map Pins */}
                 <AnimatePresence>
-                  {pins.map((pin) => (
+                  {pins?.map((pin) => (
                     <motion.div
                       key={pin.id}
                       initial={{ scale: 0, opacity: 0 }}
@@ -481,7 +486,7 @@ const Dashboard = () => {
                     >
                       {/* Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-industrial-950 border border-white/10 rounded text-[10px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                        {pin.id}
+                        {pin.id || 'N/A'}
                       </div>
 
                       <div className="relative">
@@ -654,22 +659,22 @@ const Dashboard = () => {
                   <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {pins.map((pin, i) => (
-                    <div key={pin.id} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
+                  {pins?.map((pin, i) => (
+                    <div key={pin.id || i} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
                       <div className="flex flex-col">
-                        <span className="font-mono text-[10px] text-gray-500">{pin.id}</span>
-                        <span className="font-bold text-xs">{pin.nombre}</span>
+                        <span className="font-mono text-[10px] text-gray-500">{pin.id || 'N/A'}</span>
+                        <span className="font-bold text-xs">{pin.nombre || 'Sin nombre'}</span>
                       </div>
                       <div className="flex justify-center">
                         <div className={cn(
                           "px-2 py-0.5 rounded text-[10px] font-bold border",
-                          pin.estado === 'Alarmado' || pin.estado === 'Bloqueado' 
+                          (pin.estado === 'Alarmado' || pin.estado === 'Bloqueado')
                             ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/20" 
                             : pin.estado === 'Apagado'
                             ? "bg-siac-off/10 text-siac-off border-siac-off/20"
                             : "bg-siac-armed/10 text-siac-armed border-siac-armed/20"
                         )}>
-                          {pin.estado.toUpperCase()}
+                          {(pin.estado || 'DESCONOCIDO').toUpperCase()}
                         </div>
                       </div>
                       <span className="text-right text-[10px] text-gray-500 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
@@ -677,7 +682,7 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="p-4 bg-industrial-800/20 border-t border-white/5 flex justify-between items-center text-xs shrink-0">
-                  <span className="text-gray-500">Total: {pins.length} dispositivos</span>
+                  <span className="text-gray-500">Total: {pins?.length || 0} dispositivos</span>
                   <div className="flex gap-1">
                     <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">1</button>
                     <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">2</button>
