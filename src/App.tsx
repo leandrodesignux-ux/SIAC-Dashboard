@@ -24,7 +24,8 @@ import {
   FileText,
   Moon,
   ChevronLeft,
-  ChevronRight as ChevronRightIcon
+  Plus,
+  Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
