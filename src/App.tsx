@@ -189,54 +189,42 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
       whileHover={{ y: -4 }}
       onClick={onClick}
       className={cn(
-        "bg-industrial-900 border p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
-        active ? "border-siac-armed ring-1 ring-siac-armed/50" : "border-white/5 hover:border-white/10"
+        "bg-industrial-900 border border-white/10 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
+        active ? "ring-1 ring-siac-armed/50 border-siac-armed/50" : "hover:border-white/20"
       )}
     >
-      <div className={cn(
-        "absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 pointer-events-none transition-colors",
-        kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
-      )} />
-      
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex items-center gap-4">
         <div className={cn(
-          "p-2.5 rounded-xl border border-white/5",
+          "p-3 rounded-full flex items-center justify-center shrink-0 transition-colors",
           kpi.status === 'ALERTA' ? "bg-siac-blocked/10 text-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed/10 text-siac-disarmed" : "bg-siac-armed/10 text-siac-armed"
         )}>
           <Icon className="w-6 h-6" />
         </div>
-        <div className="flex flex-col items-end">
-          <div className="text-2xl font-mono font-bold leading-none tracking-tight">
-            {kpi.value}<span className="text-gray-600 text-sm">/{kpi.total}</span>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-white">{kpi.value}</span>
+            <span className="text-xs text-gray-500 font-medium">/ {kpi.total}</span>
           </div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Sistemas</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 truncate">{kpi.label}</span>
+            <div className={cn(
+              "w-1.5 h-1.5 rounded-full",
+              kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
+            )} />
+          </div>
         </div>
       </div>
-
-      <div className="space-y-3">
-        <div className="text-sm font-bold text-gray-300 uppercase tracking-tight">{kpi.label}</div>
-        
-        {/* State Bar */}
-        <div className="h-1.5 bg-industrial-800 rounded-full overflow-hidden border border-white/5">
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: `${(kpi.value / kpi.total) * 100}%` }}
-            className={cn(
-              "h-full rounded-full transition-colors duration-500",
-              kpi.id === 'Cámara' 
-                ? (kpi.value === kpi.total ? "bg-siac-armed" : "bg-siac-disarmed")
-                : (kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed")
-            )}
-          />
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-[10px] text-gray-500 font-mono font-medium">{Math.round((kpi.value / kpi.total) * 100)}% OPERATIVO</span>
-          <div className={cn(
-            "w-2 h-2 rounded-full animate-pulse",
+      
+      {/* Mini state indicator at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/5">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${(kpi.value / kpi.total) * 100}%` }}
+          className={cn(
+            "h-full transition-colors duration-500",
             kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
-          )} />
-        </div>
+          )}
+        />
       </div>
     </motion.div>
   );
@@ -354,44 +342,73 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Header */}
-        <header className="h-16 border-b border-industrial-800 bg-industrial-900/30 backdrop-blur-sm flex items-center justify-between px-4 md:px-8 shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="h-16 border-b border-white/10 bg-industrial-900/30 backdrop-blur-md flex items-center justify-between px-4 md:px-8 shrink-0">
+          <div className="flex items-center gap-6">
             <button 
               onClick={() => setIsSidebarOpen(true)}
               className="p-2 text-gray-400 hover:text-white md:hidden"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className="hidden sm:flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-siac-green animate-pulse" />
-                <span className="text-[10px] md:text-xs font-bold text-siac-green uppercase tracking-widest">Sistema Activo</span>
-              </div>
-              <div className="hidden lg:block h-4 w-px bg-industrial-700" />
-              <div className="hidden lg:flex items-center gap-2 text-gray-500 text-xs">
-                <Activity className="w-4 h-4" />
-                <span>Conectado</span>
-              </div>
+            
+            {/* Breadcrumb / Title */}
+            <div className="flex items-center gap-3">
+              <span className="text-gray-500 text-xs font-medium uppercase tracking-widest">Dashboard</span>
+              <ChevronRight className="w-3 h-3 text-gray-600" />
+              <span className="text-white text-sm font-bold uppercase tracking-widest">Reportes</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 md:gap-6">
-            <div className="hidden sm:block text-right">
-              <div className="text-[10px] font-mono text-gray-400">vie, 24 de abr de 2026</div>
-              <div className="text-xs font-mono font-bold text-white">4:31:54 p.m.</div>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="relative">
-                <Bell className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white transition-colors" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-siac-blocked rounded-full" />
+          {/* Center Navigation Icons */}
+          <div className="hidden lg:flex items-center bg-industrial-800/50 px-4 py-1.5 rounded-full border border-white/5 gap-6">
+            <button className="text-siac-green hover:brightness-110 transition-all">
+              <LayoutDashboard className="w-4 h-4" />
+            </button>
+            <button className="text-gray-500 hover:text-white transition-all">
+              <Bell className="w-4 h-4" />
+            </button>
+            <div className="w-px h-4 bg-white/10" />
+            <button className="text-gray-500 hover:text-white transition-all">
+              <FileText className="w-4 h-4" />
+            </button>
+            <button className="text-gray-500 hover:text-white transition-all">
+              <Clock className="w-4 h-4" />
+            </button>
+            <button className="text-gray-500 hover:text-white transition-all">
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-3">
+              {/* Night Mode Selector */}
+              <button className="p-2 text-gray-400 hover:text-white transition-colors bg-industrial-800/50 rounded-lg border border-white/5">
+                <Moon className="w-4 h-4" />
+              </button>
+              
+              {/* Notifications with Badge */}
+              <div className="relative group">
+                <button className="p-2 text-gray-400 group-hover:text-white transition-colors bg-industrial-800/50 rounded-lg border border-white/5">
+                  <Bell className="w-4 h-4" />
+                </button>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-siac-blocked text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-industrial-900">2</span>
               </div>
-              <div className="w-px h-6 bg-industrial-700 mx-1 md:mx-2" />
-              <div className="flex items-center gap-2 md:gap-3 bg-industrial-800/50 p-1 rounded-full border border-industrial-700">
-                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-siac-green flex items-center justify-center text-industrial-950 font-bold text-[10px] md:text-xs">AD</div>
-                <div className="hidden md:block text-xs">
-                  <div className="font-bold text-white leading-none">Administrador</div>
-                  <div className="text-gray-500 text-[10px]">admin@siac.mx</div>
-                </div>
+            </div>
+
+            <div className="w-px h-6 bg-white/10 hidden sm:block" />
+
+            {/* Admin Profile */}
+            <div className="flex items-center gap-3 pl-2">
+              <div className="hidden md:block text-right">
+                <div className="text-xs font-bold text-white leading-none">Administrador</div>
+                <div className="text-[10px] text-gray-500 font-medium">Soporte Técnico</div>
+              </div>
+              <div className="w-9 h-9 rounded-full border-2 border-siac-green p-0.5 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" 
+                  alt="Profile" 
+                  className="w-full h-full rounded-full object-cover"
+                />
               </div>
             </div>
           </div>
@@ -450,52 +467,63 @@ const Dashboard = () => {
                 
                 {/* Map Pins */}
                 <AnimatePresence>
-                  {pins.map(pin => (
+                  {pins.map((pin) => (
                     <motion.div
                       key={pin.id}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
+                      className="absolute -translate-x-1/2 -translate-y-full cursor-pointer z-10 group"
                       style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 group/pin"
-                      onClick={() => setSelectedPin(pin)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPin(pin);
+                      }}
                     >
-                      {/* Tooltip with Framer Motion */}
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        whileHover={{ opacity: 1, y: -5, scale: 1 }}
-                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-2.5 py-1.5 bg-industrial-950/95 backdrop-blur-md border border-white/10 rounded-lg text-[10px] font-mono text-white whitespace-nowrap pointer-events-none z-50 shadow-2xl opacity-0 transition-opacity"
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="font-bold text-siac-armed">{pin.nombre}</span>
-                          <span className="text-gray-400 text-[8px] uppercase tracking-tighter">ID: {pin.id}</span>
-                        </div>
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-industrial-950/95" />
-                      </motion.div>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-industrial-950 border border-white/10 rounded text-[10px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                        {pin.id}
+                      </div>
 
-                      <motion.div 
-                        className={cn(
-                          "w-4 h-4 md:w-6 md:h-6 rounded-full flex items-center justify-center shadow-lg transition-all relative",
-                          pin.estado === 'Alarmado' ? "bg-siac-alarmed ring-2 md:ring-4 ring-siac-alarmed/30" : 
-                          pin.estado === 'Armado' ? "bg-siac-armed ring-2 md:ring-4 ring-siac-armed/30" : 
-                          pin.estado === 'Des-armado' ? "bg-siac-disarmed ring-2 md:ring-4 ring-siac-disarmed/30" : 
-                          "bg-siac-off ring-2 md:ring-4 ring-siac-off/30"
-                        )}
-                        whileHover={{ scale: 1.3 }}
-                      >
+                      <div className="relative">
                         {/* Status Ping Animation for Active/Alarmed states */}
                         {(pin.estado === 'Alarmado' || pin.estado === 'Armado') && (
                           <div className={cn(
-                            "absolute inset-0 rounded-full animate-ping opacity-40",
+                            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full animate-ping opacity-20",
                             pin.estado === 'Alarmado' ? "bg-siac-alarmed" : "bg-siac-armed"
                           )} />
                         )}
 
-                        {pin.tipo === 'Cámara' && <Camera className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
-                        {pin.tipo === 'Infrarrojo' && <Thermometer className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
-                        {pin.tipo === 'PIR' && <Radio className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
-                        {pin.tipo === 'GW' && <Cpu className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
-                        {pin.tipo === 'Activo' && <Activity className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
-                      </motion.div>
+                        {/* PIN SHAPE (Gota) */}
+                        <div className={cn(
+                          "relative w-8 h-10 transition-all duration-300 transform drop-shadow-lg",
+                          selectedPin?.id === pin.id ? "scale-125 -translate-y-1" : "hover:scale-110 hover:-translate-y-1"
+                        )}>
+                          <svg viewBox="0 0 24 30" className="w-full h-full drop-shadow-md">
+                            <path 
+                              d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" 
+                              className={cn(
+                                "transition-colors duration-300",
+                                pin.estado === 'Apagado' ? "fill-siac-off" :
+                                pin.estado === 'Armado' ? "fill-siac-armed" :
+                                pin.estado === 'Activo' ? "fill-siac-active" :
+                                pin.estado === 'Des-armado' ? "fill-siac-disarmed" :
+                                pin.estado === 'Alarmado' ? "fill-siac-alarmed" :
+                                "fill-siac-blocked"
+                              )}
+                            />
+                            <circle cx="12" cy="12" r="9" fill="black" fillOpacity="0.15" />
+                          </svg>
+
+                          {/* ICON INSIDE PIN */}
+                          <div className="absolute top-[7px] left-1/2 -translate-x-1/2 text-white">
+                            {pin.tipo === 'Cámara' && <Camera className="w-3.5 h-3.5" />}
+                            {pin.tipo === 'Infrarrojo' && <Thermometer className="w-3.5 h-3.5" />}
+                            {pin.tipo === 'PIR' && <Radio className="w-3.5 h-3.5" />}
+                            {pin.tipo === 'GW' && <Cpu className="w-3.5 h-3.5" />}
+                            {pin.tipo === 'Activo' && <Activity className="w-3.5 h-3.5" />}
+                          </div>
+                        </div>
+                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -537,51 +565,78 @@ const Dashboard = () => {
                   </button>
                 </div>
 
-                {/* Selected Pin Info */}
+                {/* Selected Pin Info (CCTV Overlay) */}
                 <AnimatePresence>
                   {selectedPin && (
                     <motion.div 
-                      initial={{ x: '100%', opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: '100%', opacity: 0 }}
-                      className="absolute inset-y-0 right-0 w-full sm:w-64 bg-industrial-900/95 backdrop-blur-xl border-l border-industrial-700 p-6 z-30 shadow-2xl"
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                      className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-[450px] bg-industrial-900/95 backdrop-blur-xl border border-white/10 rounded-2xl z-40 shadow-2xl overflow-hidden"
                     >
-                      <button 
-                        onClick={() => setSelectedPin(null)}
-                        className="absolute top-4 right-4 text-gray-500 hover:text-white"
-                      >
-                        <LogOut className="w-4 h-4 rotate-180" />
-                      </button>
-                      <div className="space-y-6">
-                        <div className="space-y-2">
+                      {/* CCTV Header */}
+                      <div className="p-4 border-b border-white/5 flex items-center justify-between bg-industrial-950/50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-siac-blocked animate-pulse" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-gray-200">LIVE: {selectedPin.nombre}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-gray-500">ID: {selectedPin.id}</span>
+                          <button 
+                            onClick={() => setSelectedPin(null)}
+                            className="p-1 hover:bg-siac-blocked/20 text-gray-500 hover:text-siac-blocked rounded-md transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Video Placeholder */}
+                      <div className="aspect-video bg-black relative group/cctv">
+                        <img 
+                          src="https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&q=80&w=800" 
+                          alt="CCTV Feed" 
+                          className="w-full h-full object-cover opacity-60 grayscale sepia-[.2]"
+                        />
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/scan-lines.png')] opacity-30 pointer-events-none" />
+                        
+                        {/* CCTV HUD */}
+                        <div className="absolute top-4 left-4 text-[10px] font-mono text-siac-armed/80">
+                          REC ● 24-04-2026 16:32:11
+                        </div>
+                        <div className="absolute bottom-4 right-4 text-[10px] font-mono text-siac-armed/80">
+                          CAM_SEC_0{selectedPin.id.slice(-1)}
+                        </div>
+
+                        {/* Navigation Controls */}
+                        <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 opacity-0 group-hover/cctv:opacity-100 transition-opacity">
+                          <button className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all">
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <button className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all">
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Footer Info */}
+                      <div className="p-4 grid grid-cols-3 gap-4 bg-industrial-950/30">
+                        <div className="space-y-1">
+                          <span className="text-[8px] text-gray-500 uppercase font-bold">Estado</span>
                           <div className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center",
-                            selectedPin.estado === 'Alarmado' ? "bg-siac-alarmed/20 text-siac-alarmed" : "bg-siac-armed/20 text-siac-armed"
-                          )}>
-                            <Activity className="w-6 h-6" />
-                          </div>
-                          <h4 className="text-xl font-bold">{selectedPin.nombre}</h4>
-                          <p className="text-xs text-gray-500 font-mono">ID: {selectedPin.id.toUpperCase()}</p>
+                            "text-[10px] font-bold",
+                            selectedPin.estado === 'Alarmado' ? "text-siac-blocked" : "text-siac-armed"
+                          )}>{selectedPin.estado.toUpperCase()}</div>
                         </div>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-industrial-800 p-3 rounded-lg">
-                              <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Tipo</div>
-                              <div className="text-sm font-medium">{selectedPin.tipo}</div>
-                            </div>
-                            <div className="bg-industrial-800 p-3 rounded-lg">
-                              <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Estado</div>
-                              <div className="text-sm font-medium">{selectedPin.estado}</div>
-                            </div>
-                          </div>
-                          <div className="bg-industrial-800 p-3 rounded-lg">
-                            <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Ubicación</div>
-                            <div className="text-sm font-medium">Zona Norte - Sector B-12</div>
-                          </div>
+                        <div className="space-y-1">
+                          <span className="text-[8px] text-gray-500 uppercase font-bold">Tipo</span>
+                          <div className="text-[10px] font-bold text-gray-200">{selectedPin.tipo.toUpperCase()}</div>
                         </div>
-                        <button className="w-full bg-siac-green text-industrial-950 font-bold py-3 rounded-lg text-sm">
-                          Ver Cámara en Vivo
-                        </button>
+                        <div className="flex items-end justify-end">
+                          <button className="px-3 py-1.5 bg-siac-armed text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all">
+                            PROTOCOLO
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -599,23 +654,30 @@ const Dashboard = () => {
                   <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {['ZONA A-1', 'ZONA B-2', 'ZONA C-3', 'ZONA D-4', 'ZONA E-5'].map((zona, i) => (
-                    <div key={zona} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
-                      <span className="font-mono text-xs">{zona}</span>
+                  {pins.map((pin, i) => (
+                    <div key={pin.id} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
+                      <div className="flex flex-col">
+                        <span className="font-mono text-[10px] text-gray-500">{pin.id}</span>
+                        <span className="font-bold text-xs">{pin.nombre}</span>
+                      </div>
                       <div className="flex justify-center">
                         <div className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-bold",
-                          i === 1 ? "bg-siac-blocked/10 text-siac-blocked border border-siac-blocked/20" : "bg-siac-armed/10 text-siac-armed border border-siac-armed/20"
+                          "px-2 py-0.5 rounded text-[10px] font-bold border",
+                          pin.estado === 'Alarmado' || pin.estado === 'Bloqueado' 
+                            ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/20" 
+                            : pin.estado === 'Apagado'
+                            ? "bg-siac-off/10 text-siac-off border-siac-off/20"
+                            : "bg-siac-armed/10 text-siac-armed border-siac-armed/20"
                         )}>
-                          {i === 1 ? 'ALERTA' : 'OK'}
+                          {pin.estado.toUpperCase()}
                         </div>
                       </div>
-                      <span className="text-right text-[10px] text-gray-500 font-mono">12:4{i} PM</span>
+                      <span className="text-right text-[10px] text-gray-500 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
                     </div>
                   ))}
                 </div>
                 <div className="p-4 bg-industrial-800/20 border-t border-white/5 flex justify-between items-center text-xs shrink-0">
-                  <span className="text-gray-500">Total: 24 zonas</span>
+                  <span className="text-gray-500">Total: {pins.length} dispositivos</span>
                   <div className="flex gap-1">
                     <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">1</button>
                     <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">2</button>
