@@ -18,7 +18,9 @@ import {
   CheckCircle2,
   Clock,
   Activity,
-  Maximize2
+  Maximize2,
+  Menu,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -107,21 +109,21 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
             </div>
             <h1 className="text-4xl font-bold tracking-tighter text-white">SIAC</h1>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-5xl font-black text-white leading-tight">
+          <div className="space-y-2 text-center md:text-left">
+            <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
               Sistema Inteligente <br />
               <span className="text-siac-green">de Monitoreo</span>
             </h2>
-            <p className="text-gray-400 text-lg max-w-sm">
+            <p className="text-gray-400 text-base md:text-lg max-w-sm mx-auto md:mx-0">
               Arquitectura de seguridad avanzada para activos industriales críticos.
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="bg-industrial-900 border border-industrial-700 p-4 rounded-xl">
+          <div className="flex flex-col md:flex-row items-center gap-4 justify-center md:justify-start">
+            <div className="bg-industrial-900 border border-industrial-700 p-4 rounded-xl w-full md:w-auto text-center md:text-left">
               <div className="text-3xl font-mono text-siac-green">20,347</div>
               <div className="text-xs uppercase tracking-widest text-gray-500">Monitoreos activos</div>
             </div>
-            <div className="w-px h-12 bg-industrial-700" />
+            <div className="hidden md:block w-px h-12 bg-industrial-700" />
             <div className="flex -space-x-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="w-8 h-8 rounded-full border-2 border-industrial-950 bg-industrial-800 flex items-center justify-center text-[10px] font-bold">
@@ -242,6 +244,7 @@ const Dashboard = () => {
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -279,17 +282,41 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-industrial-950 text-white overflow-hidden">
+    <div className="flex h-screen bg-industrial-950 text-white overflow-hidden relative">
+      {/* Sidebar Overlay (Mobile) */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-64 border-r border-industrial-800 flex flex-col bg-industrial-900/50 backdrop-blur-md">
-        <div className="p-6 flex items-center gap-3 border-b border-industrial-800">
-          <div className="w-8 h-8 bg-siac-green rounded flex items-center justify-center">
-            <ShieldCheck className="text-industrial-950 w-5 h-5" />
+      <aside className={cn(
+        "fixed inset-y-0 left-0 w-64 border-r border-industrial-800 flex flex-col bg-industrial-900 z-50 transform transition-transform duration-300 md:relative md:translate-x-0",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-6 flex items-center justify-between border-b border-industrial-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-siac-green rounded flex items-center justify-center">
+              <ShieldCheck className="text-industrial-950 w-5 h-5" />
+            </div>
+            <span className="text-xl font-bold tracking-tighter">SIAC</span>
           </div>
-          <span className="text-xl font-bold tracking-tighter">SIAC</span>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-2 text-gray-500 hover:text-white md:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <button className="w-full flex items-center gap-3 px-4 py-3 bg-siac-green/10 text-siac-green rounded-lg font-bold transition-all">
             <LayoutDashboard className="w-5 h-5" /> Dashboard
           </button>
@@ -322,36 +349,44 @@ const Dashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Header */}
-        <header className="h-16 border-b border-industrial-800 bg-industrial-900/30 backdrop-blur-sm flex items-center justify-between px-8">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-siac-green animate-pulse" />
-              <span className="text-xs font-bold text-siac-green uppercase tracking-widest">Sistema Activo</span>
-            </div>
-            <div className="h-4 w-px bg-industrial-700" />
-            <div className="flex items-center gap-2 text-gray-500 text-xs">
-              <Activity className="w-4 h-4" />
-              <span>Conectado</span>
+        <header className="h-16 border-b border-industrial-800 bg-industrial-900/30 backdrop-blur-sm flex items-center justify-between px-4 md:px-8 shrink-0">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-gray-400 hover:text-white md:hidden"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div className="hidden sm:flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-siac-green animate-pulse" />
+                <span className="text-[10px] md:text-xs font-bold text-siac-green uppercase tracking-widest">Sistema Activo</span>
+              </div>
+              <div className="hidden lg:block h-4 w-px bg-industrial-700" />
+              <div className="hidden lg:flex items-center gap-2 text-gray-500 text-xs">
+                <Activity className="w-4 h-4" />
+                <span>Conectado</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <div className="text-xs font-mono text-gray-400">vie, 24 de abr de 2026</div>
-              <div className="text-sm font-mono font-bold text-white">4:31:54 p.m.</div>
+          <div className="flex items-center gap-3 md:gap-6">
+            <div className="hidden sm:block text-right">
+              <div className="text-[10px] font-mono text-gray-400">vie, 24 de abr de 2026</div>
+              <div className="text-xs font-mono font-bold text-white">4:31:54 p.m.</div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <div className="relative">
                 <Bell className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white transition-colors" />
                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-siac-red rounded-full" />
               </div>
-              <div className="w-px h-6 bg-industrial-700 mx-2" />
-              <div className="flex items-center gap-3 bg-industrial-800/50 p-1.5 pr-4 rounded-full border border-industrial-700">
-                <div className="w-8 h-8 rounded-full bg-siac-green flex items-center justify-center text-industrial-950 font-bold text-xs">AD</div>
-                <div className="text-xs">
-                  <div className="font-bold text-white">Administrador</div>
+              <div className="w-px h-6 bg-industrial-700 mx-1 md:mx-2" />
+              <div className="flex items-center gap-2 md:gap-3 bg-industrial-800/50 p-1 rounded-full border border-industrial-700">
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-siac-green flex items-center justify-center text-industrial-950 font-bold text-[10px] md:text-xs">AD</div>
+                <div className="hidden md:block text-xs">
+                  <div className="font-bold text-white leading-none">Administrador</div>
                   <div className="text-gray-500 text-[10px]">admin@siac.mx</div>
                 </div>
               </div>
@@ -360,9 +395,9 @@ const Dashboard = () => {
         </header>
 
         {/* Dashboard Body */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8">
           {/* KPI Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {kpis.map(kpi => (
               <KPICard 
                 key={kpi.id} 
@@ -373,11 +408,11 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
             {/* Map Container */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="xl:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2">
+                <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
                   <MapIcon className="w-5 h-5 text-siac-green" /> Mapa de Instalaciones
                 </h3>
                 <button className="p-2 hover:bg-industrial-800 rounded-lg transition-colors text-gray-500 hover:text-white">
@@ -387,7 +422,7 @@ const Dashboard = () => {
               
               <div className="aspect-video bg-industrial-900 rounded-2xl border border-industrial-800 relative overflow-hidden group">
                 {/* Simulated Grid/Map Background */}
-                <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(0,255,157,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,157,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(0,255,157,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,157,0.05)_1px,transparent_1px)] bg-[size:20px_20px] md:bg-[size:40px_40px]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(10,10,10,0.8)_100%)]" />
                 
                 {/* Map Pins */}
@@ -403,30 +438,30 @@ const Dashboard = () => {
                     >
                       <motion.div 
                         className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center shadow-lg transition-all",
-                          pin.estado === 'Alarmado' ? "bg-siac-red animate-pulse ring-4 ring-siac-red/30" : 
-                          pin.estado === 'Armado' ? "bg-siac-green ring-4 ring-siac-green/30" : 
-                          pin.estado === 'Des-armado' ? "bg-siac-orange ring-4 ring-siac-orange/30" : 
-                          "bg-gray-600 ring-4 ring-gray-600/30"
+                          "w-4 h-4 md:w-6 md:h-6 rounded-full flex items-center justify-center shadow-lg transition-all",
+                          pin.estado === 'Alarmado' ? "bg-siac-red animate-pulse ring-2 md:ring-4 ring-siac-red/30" : 
+                          pin.estado === 'Armado' ? "bg-siac-green ring-2 md:ring-4 ring-siac-green/30" : 
+                          pin.estado === 'Des-armado' ? "bg-siac-orange ring-2 md:ring-4 ring-siac-orange/30" : 
+                          "bg-gray-600 ring-2 md:ring-4 ring-gray-600/30"
                         )}
                         whileHover={{ scale: 1.5 }}
                       >
-                        {pin.tipo === 'Cámara' && <Camera className="w-3 h-3 text-industrial-950" />}
-                        {pin.tipo === 'Infrarrojo' && <Thermometer className="w-3 h-3 text-industrial-950" />}
-                        {pin.tipo === 'PIR' && <Radio className="w-3 h-3 text-industrial-950" />}
-                        {pin.tipo === 'GW' && <Cpu className="w-3 h-3 text-industrial-950" />}
-                        {pin.tipo === 'Activo' && <Activity className="w-3 h-3 text-industrial-950" />}
+                        {pin.tipo === 'Cámara' && <Camera className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
+                        {pin.tipo === 'Infrarrojo' && <Thermometer className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
+                        {pin.tipo === 'PIR' && <Radio className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
+                        {pin.tipo === 'GW' && <Cpu className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
+                        {pin.tipo === 'Activo' && <Activity className="w-2 h-2 md:w-3 md:h-3 text-industrial-950" />}
                       </motion.div>
-                      <div className="mt-2 whitespace-nowrap bg-industrial-950/80 backdrop-blur px-2 py-0.5 rounded text-[10px] font-mono border border-industrial-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="hidden md:block mt-2 whitespace-nowrap bg-industrial-950/80 backdrop-blur px-2 py-0.5 rounded text-[10px] font-mono border border-industrial-700 opacity-0 group-hover:opacity-100 transition-opacity">
                         {pin.nombre}
                       </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
 
-                {/* Legend */}
-                <div className="absolute bottom-6 right-6 bg-industrial-950/80 backdrop-blur-md p-4 rounded-xl border border-industrial-800 text-[10px] space-y-2 z-20">
-                  <div className="font-bold text-gray-500 uppercase tracking-widest mb-2">Leyenda</div>
+                {/* Legend - Hidden on very small screens */}
+                <div className="hidden sm:block absolute bottom-4 right-4 md:bottom-6 md:right-6 bg-industrial-950/80 backdrop-blur-md p-3 md:p-4 rounded-xl border border-industrial-800 text-[8px] md:text-[10px] space-y-1 md:space-y-2 z-20">
+                  <div className="font-bold text-gray-500 uppercase tracking-widest mb-1 md:mb-2">Leyenda</div>
                   <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-500" /> Apagado</div>
                   <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-siac-green" /> Armado</div>
                   <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-siac-orange" /> Des-armado</div>
@@ -438,10 +473,10 @@ const Dashboard = () => {
                 <AnimatePresence>
                   {selectedPin && (
                     <motion.div 
-                      initial={{ x: 300, opacity: 0 }}
+                      initial={{ x: '100%', opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: 300, opacity: 0 }}
-                      className="absolute top-6 right-6 bottom-6 w-64 bg-industrial-900/95 backdrop-blur-xl border-l border-industrial-700 p-6 z-30 shadow-2xl"
+                      exit={{ x: '100%', opacity: 0 }}
+                      className="absolute inset-y-0 right-0 w-full sm:w-64 bg-industrial-900/95 backdrop-blur-xl border-l border-industrial-700 p-6 z-30 shadow-2xl"
                     >
                       <button 
                         onClick={() => setSelectedPin(null)}
@@ -488,10 +523,10 @@ const Dashboard = () => {
 
             {/* Installation Status */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold flex items-center gap-2">
+              <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-siac-green" /> Instalaciones
               </h3>
-              <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden flex flex-col h-[calc(100%-40px)]">
+              <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
                 <div className="p-4 border-b border-industrial-800 bg-industrial-800/30">
                   <div className="grid grid-cols-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                     <span>Nombre</span>
@@ -502,7 +537,7 @@ const Dashboard = () => {
                 <div className="flex-1 overflow-y-auto">
                   {['Zona Norte', 'Zona Sur', 'Zona Este', 'Zona Oeste'].map((zona, i) => (
                     <div key={zona} className="p-4 border-b border-industrial-800 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
-                      <div className="font-medium">{zona}</div>
+                      <div className="font-medium truncate">{zona}</div>
                       <div className="flex justify-center">
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[10px] font-bold",
@@ -515,7 +550,7 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
-                <div className="p-4 bg-industrial-800/20 border-t border-industrial-800 flex justify-between items-center text-xs">
+                <div className="p-4 bg-industrial-800/20 border-t border-industrial-800 flex justify-between items-center text-xs shrink-0">
                   <span className="text-gray-500">1-4 de 4</span>
                   <div className="flex gap-2">
                     <button className="w-6 h-6 rounded bg-industrial-800 flex items-center justify-center text-gray-500 hover:text-white">1</button>
@@ -528,34 +563,34 @@ const Dashboard = () => {
 
           {/* Alarm Console */}
           <div className="space-y-4 pb-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-siac-red" /> Listado de Alarmas
-                <span className="bg-siac-red/10 text-siac-red px-2 py-0.5 rounded-full text-xs font-mono">{filteredAlarms.length} eventos</span>
+                <span className="bg-siac-red/10 text-siac-red px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono">{filteredAlarms.length} eventos</span>
               </h3>
-              <div className="flex items-center gap-4">
-                <div className="relative">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="relative flex-1 sm:flex-initial">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input 
                     type="text" 
                     placeholder="Escribe algo..." 
-                    className="bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green w-64"
+                    className="w-full bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green sm:w-48 lg:w-64"
                   />
                 </div>
-                <button className="bg-siac-green text-industrial-950 px-4 py-2 rounded-lg text-sm font-bold hover:brightness-110 transition-all">
+                <button className="bg-siac-green text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
                   BUSCAR
                 </button>
               </div>
             </div>
 
             <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-              <div className="p-4 bg-industrial-800/30 border-b border-industrial-800 flex gap-2">
+              <div className="p-4 bg-industrial-800/30 border-b border-industrial-800 flex gap-2 overflow-x-auto scrollbar-hide">
                 {['Todos', 'Cámara', 'Infrarrojo', 'PIR', 'GW', 'Activo'].map(filter => (
                   <button 
                     key={filter}
                     onClick={() => setActiveFilter(filter as any)}
                     className={cn(
-                      "px-4 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                      "px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all border shrink-0",
                       activeFilter === filter 
                         ? "bg-siac-green text-industrial-950 border-siac-green" 
                         : "bg-industrial-800 text-gray-400 border-industrial-700 hover:border-gray-600"
@@ -566,7 +601,7 @@ const Dashboard = () => {
                 ))}
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full text-left min-w-[800px]">
                   <thead>
                     <tr className="border-b border-industrial-800 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                       <th className="px-6 py-4">Fecha</th>
