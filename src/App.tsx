@@ -39,7 +39,11 @@ import {
   ResponsiveContainer, 
   Tooltip as RechartsTooltip,
   LineChart,
-  Line
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis
 } from 'recharts';
 
 // --- Utility for Tailwind classes ---
@@ -248,6 +252,9 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
 
 // --- Reports View Component ---
 const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, setIsSearching: (v: boolean) => void }) => {
+  const [selectedInstallation, setSelectedInstallation] = useState('Parque Solar Don Humberto');
+  const [isChangingInstallation, setIsChangingInstallation] = useState(false);
+
   const donutData = [
     { title: 'Cámaras', value: 85, color: '#0B986A' },
     { title: 'Infrarrojos', value: 92, color: '#0B986A' },
@@ -264,9 +271,53 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
     { day: 'Dom', val: 40 },
   ];
 
+  const comparativeData = [
+    { zone: 'ZONA1', alarmas: 12, umbral: 10 },
+    { zone: 'ZONA2', alarmas: 8, umbral: 10 },
+    { zone: 'ZONA3', alarmas: 15, umbral: 10 },
+  ];
+
+  const deviceHealth = [
+    { id: 1, type: 'Camera', status: 'OK' },
+    { id: 2, type: 'Camera', status: 'ALERTA' },
+    { id: 3, type: 'Camera', status: 'OK' },
+    { id: 4, type: 'PIR', status: 'OK' },
+    { id: 5, type: 'PIR', status: 'PENDIENTE' },
+    { id: 6, type: 'PIR', status: 'OK' },
+    { id: 7, type: 'GW', status: 'OK' },
+    { id: 8, type: 'GW', status: 'OK' },
+    { id: 9, type: 'Activo', status: 'ALERTA' },
+    { id: 10, type: 'Activo', status: 'OK' },
+  ];
+
+  const handleInstallationChange = (val: string) => {
+    setIsChangingInstallation(true);
+    setSelectedInstallation(val);
+    setTimeout(() => setIsChangingInstallation(false), 800);
+  };
+
   const handleSearch = () => {
     setIsSearching(true);
     setTimeout(() => setIsSearching(false), 2000);
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#1F2937] border border-siac-active p-2 rounded shadow-2xl">
+          <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
+              <p className="text-xs font-bold text-white">
+                {entry.name}: {entry.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -275,8 +326,25 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
       animate={{ opacity: 1, y: 0 }}
       className="space-y-8"
     >
-      {/* Search Bar */}
+      {/* Search & Filter Bar */}
       <div className="bg-industrial-900 p-4 rounded-xl border border-white/10 flex flex-wrap items-center gap-4">
+        <div className="flex-1 min-w-[240px]">
+          <div className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">Instalación</div>
+          <div className="relative">
+            <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-siac-green" />
+            <select 
+              value={selectedInstallation}
+              onChange={(e) => handleInstallationChange(e.target.value)}
+              className="w-full bg-[#283046] border border-white/10 rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-siac-green transition-all appearance-none text-white font-bold"
+            >
+              <option value="Parque Solar Don Humberto">Parque Solar Don Humberto</option>
+              <option value="Planta Norte">Planta Norte</option>
+              <option value="Refinería Central">Refinería Central</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          </div>
+        </div>
+
         <div className="flex-1 min-w-[240px]">
           <div className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">Búsqueda por fecha</div>
           <div className="relative">
@@ -288,11 +356,12 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             />
           </div>
         </div>
+
         <div className="flex items-end h-full">
           <button 
             onClick={handleSearch}
             disabled={isSearching}
-            className="bg-siac-active hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center"
+            className="bg-siac-active hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center shadow-[0_0_15px_rgba(77,196,147,0.2)]"
           >
             {isSearching ? (
               <>
@@ -309,138 +378,244 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
         </div>
       </div>
 
-      {/* Main Report Card */}
-      <div className="bg-industrial-900 rounded-xl border border-white/10 overflow-hidden">
-        <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2">
-          <FileText className="w-4 h-4 text-siac-green" />
-          <span className="text-sm font-bold uppercase tracking-widest">Reporte Operativo Detallado</span>
-        </div>
-        
-        <div className="p-6 space-y-8">
-          {/* Equipamiento Donuts */}
-          <div className="space-y-4">
-            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Estado de Equipamiento</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {donutData.map((data, idx) => (
-                <div key={idx} className="bg-industrial-900 border border-white/10 rounded-xl p-6 flex flex-col items-center group hover:border-siac-green/30 transition-all shadow-lg">
-                  <span className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-wider">{data.title}</span>
-                  <div className="w-32 h-32 relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { value: data.value || 0 },
-                            { value: 100 - (data.value || 0) }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={35}
-                          outerRadius={45}
-                          paddingAngle={0}
-                          dataKey="value"
-                          stroke="none"
+      <AnimatePresence mode="wait">
+        {isChangingInstallation ? (
+          <motion.div 
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-[600px] flex flex-col items-center justify-center gap-4 bg-industrial-900/50 rounded-2xl border border-white/5"
+          >
+            <div className="w-12 h-12 border-4 border-siac-green border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold text-siac-green uppercase tracking-[0.2em]">Re-configurando entorno...</span>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="content"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-8"
+          >
+            {/* Main Report Card */}
+            <div className="bg-industrial-900 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+              <div className="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-siac-green" />
+                  <span className="text-sm font-bold uppercase tracking-widest">Reporte Operativo: {selectedInstallation}</span>
+                </div>
+                <div className="text-[10px] font-mono text-gray-500">REF: SIAC-REP-2026-0425</div>
+              </div>
+              
+              <div className="p-6 space-y-10">
+                {/* Equipamiento Donuts */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <div className="w-1 h-3 bg-siac-green rounded-full" />
+                    Estado de Equipamiento
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {donutData.map((data, idx) => (
+                      <motion.div 
+                        key={idx} 
+                        whileHover={{ scale: 1.02, borderColor: 'rgba(11,152,106,0.3)' }}
+                        className="bg-industrial-950/50 border border-white/5 rounded-xl p-6 flex flex-col items-center group transition-all shadow-lg hover:shadow-siac-green/5"
+                      >
+                        <span className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-wider">{data.title}</span>
+                        <div className="w-32 h-32 relative">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { value: data.value || 0, name: 'Activo' },
+                                  { value: 100 - (data.value || 0), name: 'Inactivo' }
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={35}
+                                outerRadius={45}
+                                paddingAngle={0}
+                                dataKey="value"
+                                stroke="none"
+                              >
+                                <Cell fill={data.color} />
+                                <Cell fill="rgba(255,255,255,0.05)" />
+                              </Pie>
+                              <RechartsTooltip content={<CustomTooltip />} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-xl font-bold text-white">{data.value || 0}%</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-siac-armed" />
+                          <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Funcionamiento</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Salud de Dispositivos - NEW SECTION */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <div className="w-1 h-3 bg-siac-green rounded-full" />
+                    Estado de Sensores en el Período
+                  </h4>
+                  <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-6">
+                    <div className="grid grid-cols-5 md:grid-cols-10 gap-4">
+                      {deviceHealth.map((device) => (
+                        <motion.div 
+                          key={device.id}
+                          whileHover={{ y: -2 }}
+                          className="flex flex-col items-center gap-2 p-3 bg-industrial-900/50 border border-white/5 rounded-lg group cursor-help"
                         >
-                          <Cell fill={data.color} />
-                          <Cell fill="rgba(255,255,255,0.05)" />
-                        </Pie>
-                        <RechartsTooltip 
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              return (
-                                <div className="bg-industrial-900 border border-white/10 p-2 rounded shadow-xl text-[10px] font-bold">
-                                  {payload[0].value}% Activo
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-xl font-bold text-white">{data.value || 0}%</span>
+                          <div className="relative">
+                            {device.type === 'Camera' && <Camera className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                            {device.type === 'PIR' && <Radio className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                            {device.type === 'GW' && <Cpu className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                            {device.type === 'Activo' && <Activity className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                            <div className={cn(
+                              "absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-industrial-900",
+                              device.status === 'OK' ? "bg-siac-armed" : device.status === 'ALERTA' ? "bg-siac-blocked" : "bg-siac-disarmed"
+                            )} />
+                          </div>
+                          <span className="text-[8px] font-mono text-gray-500">#{device.id}04</span>
+                        </motion.div>
+                      ))}
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-siac-armed" />
-                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Funcionamiento</span>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Tendencia Operativa Sparklines */}
-          <div className="space-y-4">
-            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Tendencia Operativa</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Alarmas Sparkline */}
-              <div className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <h5 className="text-[10px] font-bold text-gray-500 uppercase">Total de alarmas (7d)</h5>
-                    <div className="text-2xl font-bold text-white">124</div>
-                  </div>
-                  <div className="w-32 h-12">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trendData}>
-                        <Line 
-                          type="monotone" 
-                          dataKey="val" 
-                          stroke="#4DC493" 
-                          strokeWidth={2} 
-                          dot={false} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                {/* Tendencia Operativa Sparklines */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <div className="w-1 h-3 bg-siac-green rounded-full" />
+                    Tendencia Operativa
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Alarmas Sparkline */}
+                    <motion.div 
+                      whileHover={{ scale: 1.01 }}
+                      className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <h5 className="text-[10px] font-bold text-gray-500 uppercase">Total de alarmas (7d)</h5>
+                          <div className="text-2xl font-bold text-white">124</div>
+                        </div>
+                        <div className="w-32 h-12">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={trendData}>
+                              <Line 
+                                type="monotone" 
+                                dataKey="val" 
+                                stroke="#4DC493" 
+                                strokeWidth={2} 
+                                dot={false} 
+                              />
+                              <RechartsTooltip content={<CustomTooltip />} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-siac-blocked/10 rounded-lg">
+                            <AlertTriangle className="w-3 h-3 text-siac-blocked" />
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase">Incidencias Críticas</span>
+                        </div>
+                        <span className="text-xs font-bold text-siac-blocked">+12% vs sem. ant.</span>
+                      </div>
+                    </motion.div>
+
+                    {/* Tiempos Sparkline */}
+                    <motion.div 
+                      whileHover={{ scale: 1.01 }}
+                      className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <h5 className="text-[10px] font-bold text-gray-500 uppercase">Tiempo de respuesta prom.</h5>
+                          <div className="text-2xl font-bold text-white">1.8 min</div>
+                        </div>
+                        <div className="w-32 h-12">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={trendData.map(d => ({ ...d, val: 100 - d.val }))}>
+                              <Line 
+                                type="monotone" 
+                                dataKey="val" 
+                                stroke="#4DC493" 
+                                strokeWidth={2} 
+                                dot={false} 
+                              />
+                              <RechartsTooltip content={<CustomTooltip />} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-siac-active/10 rounded-lg">
+                            <Clock className="w-3 h-3 text-siac-active" />
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase">Eficiencia Operativa</span>
+                        </div>
+                        <span className="text-xs font-bold text-siac-active">ÓPTIMO</span>
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-siac-blocked/10 rounded-lg">
-                      <AlertTriangle className="w-3 h-3 text-siac-blocked" />
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">Incidencias Críticas</span>
+
+                {/* Comparativa Operativa - NEW SECTION */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <div className="w-1 h-3 bg-siac-green rounded-full" />
+                    Comparativa Operativa por Zonas
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {['ZONA1', 'ZONA2', 'ZONA3'].map((zone, i) => (
+                      <motion.div 
+                        key={zone}
+                        whileHover={{ scale: 1.01 }}
+                        className="bg-industrial-950/50 border border-white/5 rounded-xl p-5 space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-white uppercase tracking-widest">{zone}</span>
+                          <span className="text-[8px] font-mono text-gray-500">ID_SEC_{i+1}</span>
+                        </div>
+                        <div className="h-40">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={[comparativeData[i]]}>
+                              <XAxis dataKey="zone" hide />
+                              <YAxis hide />
+                              <RechartsTooltip content={<CustomTooltip />} />
+                              <Bar dataKey="alarmas" name="Alarmas" fill="#F51E1E" radius={[4, 4, 0, 0]} barSize={40} />
+                              <Bar dataKey="umbral" name="Umbral" fill="rgba(255,255,255,0.1)" radius={[4, 4, 0, 0]} barSize={40} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-bold">
+                          <div className="flex items-center gap-1.5 text-[#F51E1E]">
+                            <div className="w-2 h-2 rounded-full bg-[#F51E1E]" />
+                            ALARMAS: {comparativeData[i].alarmas}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-500">
+                            <div className="w-2 h-2 rounded-full bg-white/10" />
+                            UMBRAL: {comparativeData[i].umbral}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                  <span className="text-xs font-bold text-siac-blocked">+12% vs sem. ant.</span>
                 </div>
               </div>
-
-              {/* Tiempos Sparkline */}
-              <div className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <h5 className="text-[10px] font-bold text-gray-500 uppercase">Tiempo de respuesta prom.</h5>
-                    <div className="text-2xl font-bold text-white">1.8 min</div>
-                  </div>
-                  <div className="w-32 h-12">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trendData.map(d => ({ ...d, val: 100 - d.val }))}>
-                        <Line 
-                          type="monotone" 
-                          dataKey="val" 
-                          stroke="#4DC493" 
-                          strokeWidth={2} 
-                          dot={false} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-siac-active/10 rounded-lg">
-                      <Clock className="w-3 h-3 text-siac-active" />
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">Eficiencia Operativa</span>
-                  </div>
-                  <span className="text-xs font-bold text-siac-active">ÓPTIMO</span>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
