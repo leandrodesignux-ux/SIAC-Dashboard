@@ -39,7 +39,10 @@ import {
   Filter,
   ArrowRight,
   ArrowUpRight,
-  Info
+  Info,
+  Grid,
+  Signal,
+  Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -122,6 +125,9 @@ const INITIAL_PINS: Pin[] = [
 const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
   const [selectedAlarm, setSelectedAlarm] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [deviceTypeFilters, setDeviceTypeFilters] = useState<string[]>([]);
+  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
 
   const alarmKPIs = [
     { label: 'Alertas Totales', value: '1,284', trend: '+12%', color: 'text-white', data: [20, 35, 25, 45, 30, 55, 40] },
@@ -136,6 +142,32 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
     { id: 'EV-8390', timestamp: '2026-04-26 14:05:44', activo: 'PIR-05', tipo: 'Radio', severidad: 'Informativo', color: '#4DC493', ip: '192.168.1.112', ubicacion: 'ALMACEN_CENTRAL' },
     { id: 'EV-8389', timestamp: '2026-04-26 13:55:12', activo: 'GW-ALPHA', tipo: 'Cpu', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.45', ubicacion: 'SALA_SERVIDORES' },
     { id: 'EV-8388', timestamp: '2026-04-26 13:42:30', activo: 'ACT-99', tipo: 'Activity', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.89', ubicacion: 'VALVULA_PRINCIPAL' },
+    { id: 'EV-8387', timestamp: '2026-04-26 13:35:02', activo: 'MACH-TR_07', tipo: 'Tractor', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.77', ubicacion: 'OBRA_SECTOR_02' },
+    { id: 'EV-8386', timestamp: '2026-04-26 13:28:19', activo: 'USR-MOB_12', tipo: 'Smartphone', severidad: 'Informativo', color: '#4DC493', ip: '10.0.0.12', ubicacion: 'ACCESO_SUR' },
+    { id: 'EV-8385', timestamp: '2026-04-26 13:21:44', activo: 'PPE-STAFF_03', tipo: 'Shirt', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.33', ubicacion: 'ZONA_RESTRINGIDA_A' },
+    { id: 'EV-8384', timestamp: '2026-04-26 13:10:08', activo: 'SOL-GRID_01', tipo: 'Grid', severidad: 'Informativo', color: '#4DC493', ip: '10.0.0.201', ubicacion: 'PLANTA_SOLAR' },
+    { id: 'EV-8383', timestamp: '2026-04-26 12:58:51', activo: 'TWR-SIG_04', tipo: 'Signal', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.154', ubicacion: 'TORRE_COMMS' },
+    { id: 'EV-8382', timestamp: '2026-04-26 12:42:17', activo: 'DB-EDGE_01', tipo: 'Database', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.250', ubicacion: 'EDGE_DC' },
+  ];
+
+  const deviceTypeOptions = [
+    { id: 'Camera', label: 'Cámara' },
+    { id: 'Thermometer', label: 'Infrarrojo' },
+    { id: 'Radio', label: 'Radio' },
+    { id: 'Cpu', label: 'Gateway' },
+    { id: 'Activity', label: 'Activo' },
+    { id: 'Tractor', label: 'Maquinaria' },
+    { id: 'Smartphone', label: 'Móvil' },
+    { id: 'Shirt', label: 'Personal' },
+    { id: 'Grid', label: 'Grid' },
+    { id: 'Signal', label: 'Señal' },
+    { id: 'Database', label: 'Database' },
+  ];
+
+  const severityOptions = [
+    { id: 'Crítico', label: 'Crítico', color: '#F51E1E' },
+    { id: 'Advertencia', label: 'Advertencia', color: '#D89A1E' },
+    { id: 'Informativo', label: 'Informativo', color: '#4DC493' },
   ];
 
   const renderIcon = (tipo: string) => {
@@ -145,9 +177,39 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
       case 'Radio': return <Radio className="w-4 h-4" />;
       case 'Cpu': return <Cpu className="w-4 h-4" />;
       case 'Activity': return <Activity className="w-4 h-4" />;
+      case 'Tractor': return <Tractor className="w-4 h-4" />;
+      case 'Smartphone': return <Smartphone className="w-4 h-4" />;
+      case 'Shirt': return <Shirt className="w-4 h-4" />;
+      case 'Grid': return <Grid className="w-4 h-4" />;
+      case 'Signal': return <Signal className="w-4 h-4" />;
+      case 'Database': return <Database className="w-4 h-4" />;
       default: return <Info className="w-4 h-4" />;
     }
   };
+
+  const filteredAlarms = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return alarmsData.filter((alarm) => {
+      const searchable = [
+        alarm.id,
+        alarm.timestamp,
+        alarm.activo,
+        alarm.tipo,
+        alarm.severidad,
+        alarm.ip,
+        alarm.ubicacion,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      const matchesSearch = q.length === 0 ? true : searchable.includes(q);
+      const matchesDevice = deviceTypeFilters.length === 0 ? true : deviceTypeFilters.includes(alarm.tipo);
+      const matchesSeverity = severityFilters.length === 0 ? true : severityFilters.includes(alarm.severidad);
+
+      return matchesSearch && matchesDevice && matchesSeverity;
+    });
+  }, [alarmsData, deviceTypeFilters, searchTerm, severityFilters]);
 
   const activityData = [
     { time: '14:12', val: 30 }, { time: '14:13', val: 35 }, { time: '14:14', val: 32 },
@@ -181,10 +243,107 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button className="flex items-center gap-2 bg-industrial-900 border border-industrial-800 px-4 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition-all">
-              <Filter className="w-4 h-4" />
-              Filtrar
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsFilterOpen(v => !v)}
+                className={cn(
+                  "flex items-center gap-2 bg-industrial-900 border px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                  isFilterOpen ? "border-siac-active/40 text-white" : "border-industrial-800 text-gray-400 hover:text-white"
+                )}
+              >
+                <Filter className="w-4 h-4" />
+                Filtrar
+              </button>
+
+              <AnimatePresence>
+                {isFilterOpen && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setIsFilterOpen(false)}
+                      className="fixed inset-0 z-40"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      className="absolute right-0 mt-2 w-[360px] bg-[#1F2937] border border-industrial-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    >
+                      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-4 bg-siac-active rounded-full" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Filtros</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setDeviceTypeFilters([]);
+                            setSeverityFilters([]);
+                          }}
+                          className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+                        >
+                          Limpiar
+                        </button>
+                      </div>
+
+                      <div className="p-5 space-y-5">
+                        <div className="space-y-3">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Tipo de Dispositivo</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {deviceTypeOptions.map((opt) => {
+                              const checked = deviceTypeFilters.includes(opt.id);
+                              return (
+                                <label key={opt.id} className="flex items-center gap-2 bg-industrial-950/30 border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => {
+                                      setDeviceTypeFilters((prev) => (
+                                        prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
+                                      ));
+                                    }}
+                                    className="accent-[#0B986A]"
+                                  />
+                                  <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Tipo de Severidad</div>
+                          <div className="grid grid-cols-1 gap-2">
+                            {severityOptions.map((opt) => {
+                              const checked = severityFilters.includes(opt.id);
+                              return (
+                                <label key={opt.id} className="flex items-center justify-between gap-3 bg-industrial-950/30 border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => {
+                                        setSeverityFilters((prev) => (
+                                          prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
+                                        ));
+                                      }}
+                                      className="accent-[#0B986A]"
+                                    />
+                                    <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
+                                  </div>
+                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
@@ -228,7 +387,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
             <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-widest text-white">Listado de Eventos en Tiempo Real</span>
           </div>
-          <span className="text-[10px] font-mono text-gray-500 uppercase">Total: {alarmsData.length} registros</span>
+          <span className="text-[10px] font-mono text-gray-500 uppercase">Total: {filteredAlarms.length} registros</span>
         </div>
         
         <div className="flex-1 overflow-x-auto">
@@ -244,14 +403,13 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               </tr>
             </thead>
             <tbody>
-              {alarmsData.length > 0 ? alarmsData.map((alarm, i) => (
+              {filteredAlarms.length > 0 ? filteredAlarms.map((alarm, i) => (
                 <motion.tr 
                   key={alarm.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.05 }}
-                  className="group hover:bg-white/[0.02] border-b border-industrial-800/50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedAlarm(alarm)}
+                  className="group hover:bg-[#1F2937]/50 border-b border-industrial-800/50 transition-colors"
                 >
                   <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.id}</td>
                   <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.timestamp}</td>
@@ -272,14 +430,14 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
-                        onClick={(e) => { e.stopPropagation(); onNavigateToMap(); }}
+                        onClick={() => onNavigateToMap()}
                         className="p-2 text-gray-500 hover:text-siac-active transition-all hover:bg-siac-active/10 rounded-lg"
                         title="Ver en Mapa"
                       >
                         <MapIcon className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedAlarm(alarm); }}
+                        onClick={() => setSelectedAlarm(alarm)}
                         className="flex items-center gap-2 px-3 py-1.5 bg-industrial-800 hover:bg-industrial-700 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
                       >
                         Detalle
@@ -326,25 +484,42 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="absolute top-0 right-0 h-full w-[450px] bg-[#1F2937] border-l border-siac-active/30 z-[70] shadow-2xl flex flex-col"
             >
-              <div className="p-6 border-b border-industrial-800 flex items-center justify-between bg-industrial-950/50">
-                <div className="flex items-center gap-4">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center border-2"
-                    style={{ borderColor: selectedAlarm.color, backgroundColor: `${selectedAlarm.color}10` }}
-                  >
-                    {renderIcon(selectedAlarm.tipo)}
+              <div className="px-6 py-5 border-b border-industrial-800 bg-[#1F2937]">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center border-2 shrink-0"
+                      style={{ borderColor: selectedAlarm.color, backgroundColor: `${selectedAlarm.color}10` }}
+                    >
+                      {renderIcon(selectedAlarm.tipo)}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="space-y-0.5">
+                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">ID Evento</div>
+                        <div className="text-sm font-bold font-mono text-white">{selectedAlarm.id}</div>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Timestamp</div>
+                        <div className="text-[11px] font-mono text-gray-300">{selectedAlarm.timestamp}</div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white uppercase">{selectedAlarm.activo}</h3>
-                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">{selectedAlarm.id} • {selectedAlarm.severidad}</p>
+
+                  <div className="flex items-start gap-3">
+                    <span 
+                      className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                      style={{ color: selectedAlarm.color, borderColor: `${selectedAlarm.color}40`, backgroundColor: `${selectedAlarm.color}10` }}
+                    >
+                      {selectedAlarm.severidad}
+                    </span>
+                    <button 
+                      onClick={() => setSelectedAlarm(null)}
+                      className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedAlarm(null)}
-                  className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-8">
@@ -385,6 +560,36 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                         <Area type="monotone" dataKey="val" stroke={selectedAlarm.color} fillOpacity={1} fill="url(#colorVal)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Static Map Placeholder */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Mapa Estático</h4>
+                    <span className="text-[8px] font-mono text-gray-500 uppercase">Ubicación técnica</span>
+                  </div>
+                  <div className="h-36 w-full rounded-2xl border border-industrial-800 overflow-hidden bg-[#161D31] relative">
+                    <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(77,196,147,0.12)_0%,_transparent_55%)]" />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-white">{selectedAlarm.ubicacion}</div>
+                        <div className="text-[9px] font-mono text-gray-400">LAT 19.4326 • LON -99.1332</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedAlarm.color }} />
+                          <span className="text-[10px] font-mono text-gray-300 uppercase">{selectedAlarm.activo}</span>
+                        </div>
+                        <button
+                          onClick={() => onNavigateToMap()}
+                          className="text-[10px] font-bold uppercase tracking-widest text-siac-active hover:brightness-110 transition-all"
+                        >
+                          Ver en Mapa
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
