@@ -631,21 +631,23 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
 // --- Interactive Map View Component ---
 const InteractiveMapView = () => {
   const [selectedCamera, setSelectedCamera] = useState<any>(null);
+  const [selectedSensor, setSelectedSensor] = useState<any>(null);
   const [isAlarmsCollapsed, setIsAlarmsCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const mapPins = [
-    { id: '1', x: 25, y: 55, tipo: 'Cámara', estado: 'Apagado', label: 'ZONAS_POLN1' },
-    { id: '2', x: 32, y: 48, tipo: 'Smartphone', estado: 'Alarmado', label: 'ZONAS_POLN1' },
-    { id: '3', x: 42, y: 62, tipo: 'Smartphone', estado: 'Armado', label: 'ZONAS_POLN1' },
-    { id: '4', x: 45, y: 40, tipo: 'Shirt', estado: 'Apagado', label: 'ZONAS_POLN1' },
+    { id: '1', x: 25, y: 55, tipo: 'Cámara', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '2', x: 32, y: 48, tipo: 'Smartphone', estado: 'Bloqueado', label: 'ZONAS_POL' },
+    { id: '3', x: 42, y: 62, tipo: 'Smartphone', estado: 'Armado', label: 'ACT_VALVE_22' },
+    { id: '4', x: 45, y: 40, tipo: 'Shirt', estado: 'Apagado', label: 'ZONAS_MASTER_01' },
     { id: '5', x: 50, y: 55, tipo: 'Tractor', estado: 'Des-armado', label: 'ZONAS_POLN1' },
-    { id: '6', x: 58, y: 52, tipo: 'Shirt', estado: 'Armado', label: 'ZONAS_POLN1' },
-    { id: '7', x: 50, y: 30, tipo: 'Radio', estado: 'Bloqueado', label: 'ZONAS_POLN1' },
-    { id: '8', x: 62, y: 45, tipo: 'Sun', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '6', x: 58, y: 52, tipo: 'Shirt', estado: 'Armado', label: 'ZONAS_POL' },
+    { id: '7', x: 50, y: 30, tipo: 'Radio', estado: 'Bloqueado', label: 'ACT_VALVE_22' },
+    { id: '8', x: 62, y: 45, tipo: 'Sun', estado: 'Armado', label: 'ZONAS_MASTER_01' },
     { id: '9', x: 70, y: 38, tipo: 'Radio', estado: 'Apagado', label: 'ZONAS_POLN1' },
-    { id: '10', x: 75, y: 52, tipo: 'Camera', estado: 'Armado', label: 'ZONAS_POLN1' },
-    { id: '11', x: 80, y: 45, tipo: 'Sun', estado: 'Armado', label: 'ZONAS_POLN1' },
-    { id: '12', x: 90, y: 30, tipo: 'Radio', estado: 'Apagado', label: 'ZONAS_POLN1' },
+    { id: '10', x: 75, y: 52, tipo: 'Camera', estado: 'Armado', label: 'ZONAS_POL' },
+    { id: '11', x: 80, y: 45, tipo: 'Sun', estado: 'Armado', label: 'ACT_VALVE_22' },
+    { id: '12', x: 90, y: 30, tipo: 'Radio', estado: 'Apagado', label: 'ZONAS_MASTER_01' },
   ];
 
   const alarms = [
@@ -661,35 +663,86 @@ const InteractiveMapView = () => {
     'Bloqueado': '#F51E1E',
   };
 
-  const renderIcon = (tipo: string) => {
+  const renderIcon = (tipo: string, color: string = "white") => {
+    const iconClass = cn("w-5 h-5", color === "white" ? "text-white" : "text-siac-active");
     switch (tipo) {
       case 'Cámara':
-      case 'Camera': return <Camera className="w-4 h-4" />;
-      case 'Radio': return <Radio className="w-4 h-4" />;
-      case 'Sun': return <Sun className="w-4 h-4" />;
-      case 'Smartphone': return <Smartphone className="w-4 h-4" />;
-      case 'Shirt': return <Shirt className="w-4 h-4" />;
-      case 'Tractor': return <Tractor className="w-4 h-4" />;
-      default: return <Radio className="w-4 h-4" />;
+      case 'Camera': return <Camera className={iconClass} />;
+      case 'Radio':
+      case 'Signal': return <Radio className={iconClass} />;
+      case 'Sun':
+      case 'Grid': return <Sun className={iconClass} />;
+      case 'Smartphone': return <Smartphone className={iconClass} />;
+      case 'Shirt':
+      case 'HardHat': return <Shirt className={iconClass} />;
+      case 'Tractor': return <Tractor className={iconClass} />;
+      default: return <Radio className={iconClass} />;
     }
   };
 
-  return (
-    <div className="flex-1 relative bg-[#E5E7EB] overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
-      {/* Map Background Simulation */}
-      <div className="absolute inset-0 z-0 opacity-40 mix-blend-multiply pointer-events-none">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/gray-paper.png')]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.1)_100%)]" />
+  const DataChartTooltip = ({ sensor, onClose }: { sensor: any, onClose: () => void }) => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 10 }}
+      className="absolute z-50 bg-[#1F2937] border-2 border-siac-active rounded-xl shadow-2xl p-4 w-64 pointer-events-auto"
+      style={{ left: `${sensor.x}%`, top: `${sensor.y - 15}%`, transform: 'translateX(-50%)' }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {renderIcon(sensor.tipo, "siac-active")}
+          <span className="text-xs font-bold text-white uppercase">{sensor.label}</span>
+        </div>
+        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <X className="w-4 h-4" />
+        </button>
       </div>
       
-      {/* Simulated Map Iframe/Image */}
+      <div className="space-y-4">
+        <div className="h-16 w-full bg-industrial-950/50 rounded-lg p-2 overflow-hidden">
+          <div className="flex items-end gap-1 h-full">
+            {[40, 60, 45, 80, 55, 70, 90, 65, 50, 75].map((h, i) => (
+              <motion.div 
+                key={i}
+                initial={{ height: 0 }}
+                animate={{ height: `${h}%` }}
+                className="flex-1 bg-siac-active/40 rounded-t-sm"
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-industrial-950/30 p-2 rounded-lg">
+            <div className="text-[8px] text-gray-500 uppercase font-bold">Estado</div>
+            <div className="text-[10px] font-bold text-siac-active uppercase">{sensor.estado}</div>
+          </div>
+          <div className="bg-industrial-950/30 p-2 rounded-lg">
+            <div className="text-[8px] text-gray-500 uppercase font-bold">Tendencia</div>
+            <div className="text-[10px] font-bold text-white uppercase">+12.5%</div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <div className="flex-1 relative bg-[#F3F4F6] overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+      {/* Map Background - Technical Light Style */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000" 
-          className="w-full h-full object-cover opacity-20 grayscale brightness-125"
-          alt="Map Background"
+          src="https://images.unsplash.com/photo-1569336415962-a4bd9f6dfc0f?auto=format&fit=crop&q=80&w=2000" 
+          className="w-full h-full object-cover opacity-30 grayscale-[0.5] brightness-[1.05]"
+          alt="Technical Map Background"
         />
-        <div className="absolute inset-0 bg-white/40" />
+        <div className="absolute inset-0 bg-white/10" />
+        {/* Technical Grid Overlay */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+          style={{ 
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }} 
+        />
       </div>
 
       {/* Pins Layer */}
@@ -700,33 +753,28 @@ const InteractiveMapView = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             whileHover={{ scale: 1.1 }}
-            className="absolute -translate-x-1/2 -translate-y-full cursor-pointer group"
+            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
             style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-            onClick={() => pin.tipo === 'Cámara' || pin.tipo === 'Camera' ? setSelectedCamera(pin) : null}
+            onClick={() => {
+              if (pin.tipo === 'Cámara' || pin.tipo === 'Camera') {
+                setSelectedCamera(pin);
+                setSelectedSensor(null);
+              } else {
+                setSelectedSensor(pin);
+                setSelectedCamera(null);
+              }
+            }}
           >
-            {/* Tooltip for non-camera sensors */}
-            {(pin.tipo !== 'Cámara' && pin.tipo !== 'Camera') && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-industrial-900 text-white text-[10px] font-bold rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-siac-active/30">
-                {pin.tipo}: {pin.estado}
-              </div>
-            )}
-
             <div className="relative flex flex-col items-center">
-              {/* Pin Gota */}
-              <div className="relative w-10 h-12 drop-shadow-xl">
-                <svg viewBox="0 0 24 30" className="w-full h-full">
-                  <path 
-                    d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" 
-                    fill={statusColors[pin.estado as keyof typeof statusColors]}
-                  />
-                  <circle cx="12" cy="12" r="8" fill="white" />
-                </svg>
-                <div className="absolute top-[4px] left-1/2 -translate-x-1/2 text-industrial-900 mt-[4px]">
-                  {renderIcon(pin.tipo)}
-                </div>
+              {/* Circular Pin Design */}
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 border-2 border-white group-hover:shadow-2xl group-hover:scale-110"
+                style={{ backgroundColor: statusColors[pin.estado as keyof typeof statusColors] }}
+              >
+                {renderIcon(pin.tipo)}
               </div>
-              {/* Label */}
-              <div className="mt-1 px-2 py-0.5 bg-white/80 backdrop-blur-sm rounded text-[8px] font-bold text-industrial-900 border border-black/5 whitespace-nowrap shadow-sm">
+              {/* Technical Label */}
+              <div className="mt-2 px-2 py-0.5 bg-white/90 backdrop-blur-sm rounded text-[9px] font-bold text-industrial-900 border border-black/10 whitespace-nowrap shadow-md uppercase tracking-tighter">
                 {pin.label}
               </div>
             </div>
@@ -734,153 +782,168 @@ const InteractiveMapView = () => {
         ))}
       </div>
 
+      {/* Data Chart Tooltip */}
+      <AnimatePresence>
+        {selectedSensor && (
+          <DataChartTooltip 
+            sensor={selectedSensor} 
+            onClose={() => setSelectedSensor(null)} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* Floating Legend (Top Left) */}
-      <div className="absolute top-6 left-6 z-30 bg-white p-4 rounded-xl border-2 border-siac-armed shadow-xl min-w-[140px]">
+      <div className="absolute top-6 left-6 z-30 bg-white p-4 rounded-xl border-2 border-siac-armed/30 shadow-2xl min-w-[160px]">
+        <div className="text-[10px] font-bold text-industrial-900 uppercase tracking-widest mb-4 text-center border-b border-gray-100 pb-2">
+          Leyenda
+        </div>
         <div className="space-y-3">
           {Object.entries(statusColors).map(([status, color]) => (
             <div key={status} className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-xs font-bold text-gray-600">{status}</span>
+              <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{status}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Map Controls (Bottom Right) */}
-      <div className="absolute bottom-6 right-6 z-30 flex flex-col gap-2">
-        <div className="bg-white p-1 rounded-lg shadow-lg flex flex-col border border-black/5">
-          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-t-md">
-            <Maximize className="w-5 h-5" />
+      {/* Map Controls (Top Right) */}
+      <div className="absolute top-6 right-6 z-30 flex flex-col gap-2">
+        <div className="bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-xl flex flex-col border border-black/5">
+          <button className="p-2 text-industrial-900 hover:bg-gray-100 transition-colors rounded-t-md">
+            <Maximize className="w-4 h-4" />
           </button>
         </div>
-        <div className="bg-white p-1 rounded-lg shadow-lg flex flex-col border border-black/5">
-          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-t-md border-b border-gray-100">
-            <Plus className="w-5 h-5" />
+        <div className="bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-xl flex flex-col border border-black/5">
+          <button className="p-2 text-industrial-900 hover:bg-gray-100 transition-colors rounded-t-md border-b border-gray-100">
+            <Plus className="w-4 h-4" />
           </button>
-          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-b-md">
-            <Minus className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="bg-white p-1 rounded-lg shadow-lg flex flex-col border border-black/5">
-          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-md">
-            <User className="w-5 h-5" />
+          <button className="p-2 text-industrial-900 hover:bg-gray-100 transition-colors rounded-b-md">
+            <Minus className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Camera Modal (Bottom Left) */}
+      {/* Camera Modal (Bottom Left - Isolated) */}
       <AnimatePresence>
         {selectedCamera && (
           <motion.div
-            initial={{ opacity: 0, x: -50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: -50, scale: 0.9 }}
-            className="absolute bottom-6 left-6 z-50 w-[380px] bg-[#1F2937] border-2 border-siac-active rounded-xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="absolute bottom-[80px] left-8 z-50 w-[380px] bg-[#1F2937] border-2 border-siac-active rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
           >
             <div className="relative">
-              {/* Close Button */}
               <button 
                 onClick={() => setSelectedCamera(null)}
-                className="absolute top-2 right-2 z-10 p-1 bg-siac-blocked text-white rounded hover:brightness-110 transition-all"
+                className="absolute top-3 right-3 z-10 p-1.5 bg-black/50 text-white rounded-full hover:bg-siac-blocked transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
               
-              {/* CCTV Feed */}
               <div className="aspect-video bg-black relative">
                 <img 
                   src="https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&q=80&w=800" 
-                  className="w-full h-full object-cover opacity-60 grayscale sepia-[.2]"
-                  alt="Night Vision Feed"
+                  className="w-full h-full object-cover opacity-70 grayscale"
+                  alt="CCTV Feed"
                 />
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/scan-lines.png')] opacity-20 pointer-events-none" />
-                
-                {/* HUD Overlay */}
-                <div className="absolute top-3 left-3 flex flex-col">
-                  <span className="text-[10px] font-mono text-siac-active font-bold">PTZ Monitoring</span>
-                  <span className="text-[8px] font-mono text-gray-400">2024-04-20 01:42:13</span>
-                </div>
-
-                {/* Carousel Controls */}
-                <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
-                  <button className="p-1.5 bg-black/40 text-white rounded-full hover:bg-black/60 transition-all">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button className="p-1.5 bg-black/40 text-white rounded-full hover:bg-black/60 transition-all">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Carousel Dots */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className={cn("w-1.5 h-1.5 rounded-full", i === 1 ? "bg-white" : "bg-white/30")} />
-                  ))}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
+                <div className="absolute top-4 left-4 flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
+                    <span className="text-[10px] font-mono text-siac-active font-bold tracking-widest uppercase">REC • {selectedCamera.label}</span>
+                  </div>
+                  <span className="text-[8px] font-mono text-gray-400">CAM_ID: {selectedCamera.id} | 2026-04-26</span>
                 </div>
               </div>
 
-              {/* Info Bar */}
-              <div className="p-3 bg-industrial-950 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Cámara: {selectedCamera.id}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
-                  <span className="text-[10px] font-bold text-siac-active">LIVE FEED</span>
+              <div className="p-4 bg-industrial-950/80 backdrop-blur-md flex items-center justify-between border-t border-white/5">
+                <div className="flex gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-[8px] text-gray-500 uppercase font-bold">Ubicación</span>
+                    <span className="text-[10px] text-white font-bold">{selectedCamera.label}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] text-gray-500 uppercase font-bold">Estado</span>
+                    <span className="text-[10px] text-siac-active font-bold uppercase">Conectado</span>
+                  </div>
                 </div>
+                <button className="px-4 py-1.5 bg-siac-active text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all uppercase tracking-widest">
+                  PTZ Control
+                </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Alarms List (Bottom Center) */}
+      {/* Alarms List (Bottom Center - Wider & Redesigned) */}
       <div className={cn(
-        "absolute bottom-0 left-1/2 -translate-x-1/2 z-40 w-[85%] max-w-[900px] transition-all duration-500 transform",
-        isAlarmsCollapsed ? "translate-y-[calc(100%-48px)]" : "translate-y-[-24px]"
+        "absolute bottom-0 left-1/2 -translate-x-1/2 z-40 w-[85%] max-w-[1000px] transition-all duration-500 transform",
+        isAlarmsCollapsed ? "translate-y-[calc(100%-56px)]" : "translate-y-[-20px]"
       )}>
-        <div className="bg-industrial-900 border-2 border-siac-armed rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="p-3 bg-industrial-950/50 border-b border-white/5 flex items-center justify-between">
-            <div className="flex-1" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-white">Listado de alarmas</h3>
-            <div className="flex-1 flex justify-end">
+        <div className="bg-industrial-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          {/* Technical Header */}
+          <div className="px-6 py-4 bg-[#1F2937] flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg bg-siac-active/10 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-siac-active" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white">Listado de alarmas</h3>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-siac-active transition-colors" />
+                <input 
+                  type="text"
+                  placeholder="BUSCAR EVENTO TÉCNICO..."
+                  className="bg-industrial-950/50 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-[10px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-siac-active/50 w-64 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               <button 
                 onClick={() => setIsAlarmsCollapsed(!isAlarmsCollapsed)}
-                className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
+                className="p-2 hover:bg-white/5 rounded-full transition-all group"
               >
-                <ChevronDown className={cn("w-5 h-5 text-siac-armed transition-transform duration-300", isAlarmsCollapsed ? "rotate-180" : "")} />
+                <ChevronDown className={cn("w-6 h-6 text-siac-active transition-transform duration-500", isAlarmsCollapsed ? "rotate-180" : "")} />
               </button>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="p-4">
+          {/* Technical Table */}
+          <div className="p-6">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
-                  <th className="pb-3 px-2">Fecha</th>
-                  <th className="pb-3 px-2">Estado</th>
-                  <th className="pb-3 px-2">Dispositivo</th>
-                  <th className="pb-3 px-2">Ubicación</th>
-                  <th className="pb-3 px-2 text-right">Actions</th>
+                  <th className="pb-4 px-4">Timestamp</th>
+                  <th className="pb-4 px-4">Prioridad / Estado</th>
+                  <th className="pb-4 px-4">ID Dispositivo</th>
+                  <th className="pb-4 px-4">Localización Técnica</th>
+                  <th className="pb-4 px-4 text-right">Protocolo</th>
                 </tr>
               </thead>
-              <tbody className="text-xs font-medium">
+              <tbody className="text-[11px] font-bold">
                 {alarms.map((alarm, idx) => (
-                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="py-3 px-2 font-mono text-gray-400">{alarm.fecha}</td>
-                    <td className="py-3 px-2">
+                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-all group">
+                    <td className="py-4 px-4 font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.fecha}</td>
+                    <td className="py-4 px-4">
                       <span className={cn(
-                        "px-3 py-1 rounded-full border text-[10px] font-bold",
-                        alarm.estado === 'Pendiente' ? "border-siac-disarmed/30 text-siac-disarmed bg-siac-disarmed/5" : "border-siac-active/30 text-siac-active bg-siac-active/5"
+                        "inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-wider transition-all",
+                        alarm.estado === 'Pendiente' 
+                          ? "border-orange-500/30 text-orange-500 bg-orange-500/5 shadow-[0_0_10px_rgba(249,115,22,0.1)]" 
+                          : "border-siac-active/30 text-siac-active bg-siac-active/5 shadow-[0_0_10px_rgba(77,196,147,0.1)]"
                       )}>
+                        <div className={cn("w-1.5 h-1.5 rounded-full", alarm.estado === 'Pendiente' ? "bg-orange-500" : "bg-siac-active")} />
                         {alarm.estado}
                       </span>
                     </td>
-                    <td className="py-3 px-2 font-bold text-gray-300">{alarm.dispositivo}</td>
-                    <td className="py-3 px-2 text-gray-400">{alarm.ubicacion}</td>
-                    <td className="py-3 px-2 text-right">
-                      <button className="text-gray-500 hover:text-white transition-colors">
-                        <Search className="w-4 h-4" />
+                    <td className="py-4 px-4 text-gray-300 group-hover:text-siac-active transition-colors">{alarm.dispositivo}</td>
+                    <td className="py-4 px-4 text-gray-500 uppercase tracking-tighter">{alarm.ubicacion}</td>
+                    <td className="py-4 px-4 text-right">
+                      <button className="text-[10px] text-siac-active hover:text-white border border-siac-active/20 hover:border-siac-active px-3 py-1 rounded-md transition-all uppercase">
+                        Ver Detalles
                       </button>
                     </td>
                   </tr>
@@ -888,19 +951,28 @@ const InteractiveMapView = () => {
               </tbody>
             </table>
 
-            {/* Pagination */}
-            <div className="mt-4 flex items-center justify-center gap-4 text-xs font-bold">
-              <button className="text-gray-600 hover:text-white transition-colors">
-                <ChevronLeft className="w-4 h-4" />
+            {/* Pixel Perfect Pagination */}
+            <div className="mt-8 flex items-center justify-center gap-6">
+              <button className="text-siac-active hover:scale-110 transition-transform disabled:opacity-30">
+                <ChevronLeft className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-3">
-                <span className="text-siac-active">1</span>
-                <span className="text-gray-600 hover:text-white cursor-pointer">2</span>
-                <span className="text-gray-600 hover:text-white cursor-pointer">3</span>
-                <span className="text-gray-600 hover:text-white cursor-pointer">4</span>
+              <div className="flex gap-3">
+                {[1, 2, 3, 4].map(n => (
+                  <button 
+                    key={n}
+                    className={cn(
+                      "w-9 h-9 rounded-xl text-[11px] font-bold transition-all border flex items-center justify-center",
+                      n === 1 
+                        ? "bg-siac-active text-industrial-950 border-siac-active shadow-lg shadow-siac-active/20" 
+                        : "text-gray-500 border-white/5 hover:border-white/20 hover:text-white hover:bg-white/5"
+                    )}
+                  >
+                    {n}
+                  </button>
+                ))}
               </div>
-              <button className="text-gray-600 hover:text-white transition-colors">
-                <ChevronRight className="w-4 h-4" />
+              <button className="text-siac-active hover:scale-110 transition-transform">
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
