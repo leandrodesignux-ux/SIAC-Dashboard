@@ -48,7 +48,12 @@ import {
   UserPlus,
   UserCog,
   Unlock,
-  Key
+  Key,
+  Sliders,
+  Globe,
+  Shield,
+  Palette,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -1368,6 +1373,426 @@ const UsersView = () => {
   );
 };
 
+const SettingsView = () => {
+  const [activeTab, setActiveTab] = useState<'general' | 'umbrales' | 'seguridad' | 'apariencia'>('general');
+  const [sensorSensitivity, setSensorSensitivity] = useState(72);
+  const [timeoutSeconds, setTimeoutSeconds] = useState(30);
+  const [desktopNotifications, setDesktopNotifications] = useState(true);
+  const [alertSounds, setAlertSounds] = useState(true);
+  const [apiKey, setApiKey] = useState('SIAC_API_KEY_REDACTED');
+  const [copied, setCopied] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState(12);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1400);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  const generateApiKey = () => {
+    const bytes = Array.from({ length: 24 }).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+    setApiKey(`siac_api_${bytes}`);
+  };
+
+  const copyApiKey = async () => {
+    try {
+      await navigator.clipboard.writeText(apiKey);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const sliderBg = (value: number, min: number, max: number) => {
+    const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+    return `linear-gradient(to right, #0B986A 0%, #0B986A ${pct}%, rgba(255,255,255,0.08) ${pct}%, rgba(255,255,255,0.08) 100%)`;
+  };
+
+  const TechSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "w-11 h-6 rounded-full border transition-all relative",
+        checked ? "bg-siac-active/20 border-siac-active/40" : "bg-white/[0.04] border-white/10"
+      )}
+      aria-pressed={checked}
+    >
+      <span
+        className={cn(
+          "absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all shadow-sm",
+          checked ? "bg-[#0B986A] left-[22px]" : "bg-white/50 left-0.5"
+        )}
+      />
+    </button>
+  );
+
+  const SectionButton = ({
+    id,
+    label,
+    icon,
+  }: {
+    id: 'general' | 'umbrales' | 'seguridad' | 'apariencia';
+    label: string;
+    icon: JSX.Element;
+  }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={cn(
+        "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all",
+        activeTab === id ? "bg-siac-active/10 border-siac-active/20 text-white" : "bg-white/[0.02] border-white/5 text-gray-300 hover:bg-white/[0.03] hover:border-white/10"
+      )}
+    >
+      <div className={cn(
+        "w-9 h-9 rounded-lg border flex items-center justify-center",
+        activeTab === id ? "border-siac-active/30 bg-siac-active/10" : "border-white/10 bg-industrial-950/30"
+      )}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-xs font-bold uppercase tracking-widest truncate">{label}</div>
+        <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">
+          {id === 'general' ? 'Base' : id === 'umbrales' ? 'Señal' : id === 'seguridad' ? 'IAM' : 'UI'}
+        </div>
+      </div>
+    </button>
+  );
+
+  return (
+    <div className="flex-1 flex flex-col p-8 gap-6 overflow-y-auto bg-industrial-950 relative">
+      <div className="flex items-start justify-between gap-6">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-industrial-900 border border-industrial-800 rounded-lg">
+            <Settings className="w-6 h-6 text-siac-active" />
+          </div>
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-white tracking-tight">Configuración</div>
+            <div className="text-xs text-gray-500 uppercase font-mono tracking-widest">Control Panel • SIAC v2</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 items-start">
+        <div className="bg-[#161D31] border border-white/5 rounded-2xl p-4 space-y-3">
+          <div className="px-2 pb-2 border-b border-white/5">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Secciones</div>
+          </div>
+          <SectionButton id="general" label="General" icon={<Globe className="w-4 h-4 text-gray-200" />} />
+          <SectionButton id="umbrales" label="Umbrales" icon={<Sliders className="w-4 h-4 text-gray-200" />} />
+          <SectionButton id="seguridad" label="Seguridad" icon={<Shield className="w-4 h-4 text-gray-200" />} />
+          <SectionButton id="apariencia" label="Apariencia" icon={<Palette className="w-4 h-4 text-gray-200" />} />
+        </div>
+
+        <div className="space-y-6">
+          {activeTab === 'general' && (
+            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Globe className="w-4 h-4 text-gray-300" />
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-white">General</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Notificaciones y comportamiento</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between gap-4 bg-industrial-950/30 border border-white/5 rounded-2xl px-5 py-4">
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold uppercase tracking-widest text-white">Notificaciones de Escritorio</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">Eventos críticos y cambios de estado</div>
+                  </div>
+                  <TechSwitch checked={desktopNotifications} onChange={setDesktopNotifications} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 bg-industrial-950/30 border border-white/5 rounded-2xl px-5 py-4">
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold uppercase tracking-widest text-white">Sonidos de Alerta</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">Sirena / chime operacional</div>
+                  </div>
+                  <TechSwitch checked={alertSounds} onChange={setAlertSounds} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'umbrales' && (
+            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sliders className="w-4 h-4 text-gray-300" />
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-white">Umbrales</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Calibración de sensores</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-5">
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-widest text-white">Sensibilidad de Sensores</div>
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Detección / ruido de señal</div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-siac-active/30 bg-siac-active/10 text-siac-active">
+                      {sensorSensitivity}%
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={sensorSensitivity}
+                      onChange={(e) => setSensorSensitivity(Number(e.target.value))}
+                      className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                      style={{ background: sliderBg(sensorSensitivity, 0, 100), accentColor: '#0B986A' } as any}
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-widest text-white">Tiempo de Timeout</div>
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Reintento / heartbeat</div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-siac-active/30 bg-siac-active/10 text-siac-active">
+                      {timeoutSeconds}s
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <input
+                      type="range"
+                      min={5}
+                      max={120}
+                      value={timeoutSeconds}
+                      onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
+                      className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                      style={{ background: sliderBg(timeoutSeconds, 5, 120), accentColor: '#0B986A' } as any}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'seguridad' && (
+            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-4 h-4 text-gray-300" />
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-white">Seguridad</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">IAM • tokens y llaves</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-5">
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Key className="w-4 h-4 text-gray-300" />
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-widest text-white">Rotación de Llaves de API</div>
+                        <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Regenerar / copiar credenciales</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={generateApiKey}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-industrial-900 border border-white/10 hover:border-white/20 text-[10px] font-bold uppercase tracking-widest text-white transition-colors"
+                      >
+                        <RefreshCw className="w-4 h-4 text-gray-300" />
+                        Generar Nueva
+                      </button>
+                      <button
+                        onClick={copyApiKey}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-colors",
+                          copied ? "bg-siac-active/10 border-siac-active/30 text-siac-active" : "bg-industrial-900 border-white/10 hover:border-white/20 text-white"
+                        )}
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-4 bg-[#1F2937]/60 border border-white/5 rounded-xl px-4 py-3 font-mono text-[11px] text-gray-200 overflow-hidden">
+                    {apiKey}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-gray-500">
+                    <span>Scope: edge-api</span>
+                    <span className={cn(copied ? "text-siac-active" : "text-gray-500")}>{copied ? 'Copiado' : 'Listo'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'apariencia' && (
+            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Palette className="w-4 h-4 text-gray-300" />
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-white">Apariencia</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Modo y densidad visual</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl px-5 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold uppercase tracking-widest text-white">Modo Oscuro Industrial</div>
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">Tema por defecto SIAC</div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10 bg-white/[0.03] text-gray-200">
+                      ACTIVO
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl px-5 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold uppercase tracking-widest text-white">Densidad UI</div>
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">Compacta (operación)</div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10 bg-white/[0.03] text-gray-200">
+                      COMPACTA
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Database className="w-4 h-4 text-gray-300" />
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-white">Información del Sistema</div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Cierre • estado y mantenimiento</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Versión</div>
+                <div className="mt-2 text-lg font-black text-white">v2.4.0-pro</div>
+              </div>
+              <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Trial</div>
+                <div className="mt-2 text-lg font-black text-white">{trialDaysLeft} días</div>
+                <button
+                  onClick={() => setTrialDaysLeft((v) => Math.max(0, v - 1))}
+                  className="mt-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-colors"
+                >
+                  Simular -1 día
+                </button>
+              </div>
+              <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Mantenimiento</div>
+                  <div className="mt-2 text-[11px] font-mono text-gray-300 uppercase tracking-widest">Reiniciar Base de Datos</div>
+                </div>
+                <button
+                  onClick={() => setResetOpen(true)}
+                  className="mt-4 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-widest border"
+                  style={{ backgroundColor: '#F51E1E10', borderColor: '#F51E1E40', color: '#F51E1E' }}
+                >
+                  <Database className="w-4 h-4" />
+                  Reiniciar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {resetOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => (resetting ? null : setResetOpen(false))}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 240 }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[90] w-[520px] bg-[#161D31] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/10 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl border border-[#F51E1E40] bg-[#F51E1E10] flex items-center justify-center">
+                    <Database className="w-5 h-5" style={{ color: '#F51E1E' }} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold uppercase tracking-widest text-white">Confirmación</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Acción destructiva • entorno local</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => (resetting ? null : setResetOpen(false))}
+                  className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                  <div className="text-xs font-bold uppercase tracking-widest text-white">Reiniciar Base de Datos</div>
+                  <div className="mt-2 text-[11px] font-mono text-gray-300 uppercase tracking-widest">
+                    Esto eliminará datos locales y reiniciará el estado de simulación. Esta acción no se puede deshacer.
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-white/10 bg-industrial-950/50 grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => (resetting ? null : setResetOpen(false))}
+                  className="flex items-center justify-center gap-2 py-3 bg-industrial-800 hover:bg-industrial-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+                  disabled={resetting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setResetting(true);
+                    setTimeout(() => {
+                      setResetting(false);
+                      setResetOpen(false);
+                    }, 900);
+                  }}
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+                  style={{ backgroundColor: '#F51E1E', color: '#161D31' }}
+                  disabled={resetting}
+                >
+                  {resetting ? 'Reiniciando…' : 'Confirmar Reinicio'}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // --- Components ---
 
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
@@ -2242,7 +2667,7 @@ const InteractiveMapView = () => {
 
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento' | 'Usuarios'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento' | 'Usuarios' | 'Configuración'>('dashboard');
   const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
@@ -2376,7 +2801,13 @@ const Dashboard = () => {
           >
             <Users className="w-5 h-5" /> Usuarios
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
+          <button 
+            onClick={() => { setCurrentView('Configuración'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
+              currentView === 'Configuración' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
             <Settings className="w-5 h-5" /> Configuración
           </button>
         </nav>
@@ -2473,6 +2904,15 @@ const Dashboard = () => {
                   </div>
                 </>
               )}
+              {currentView === 'Configuración' && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                    <Settings className="w-3 h-3" />
+                    <span>Configuración</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -2525,7 +2965,13 @@ const Dashboard = () => {
             >
               <Clock className="w-4 h-4" />
             </button>
-            <button className="text-gray-500 hover:text-white transition-all">
+            <button
+              onClick={() => setCurrentView('Configuración')}
+              className={cn(
+                "transition-all",
+                currentView === 'Configuración' ? "text-siac-green" : "text-gray-500 hover:text-white"
+              )}
+            >
               <Settings className="w-4 h-4" />
             </button>
           </div>
@@ -2951,6 +3397,8 @@ const Dashboard = () => {
             <TrackingView />
           ) : currentView === 'Usuarios' ? (
             <UsersView />
+          ) : currentView === 'Configuración' ? (
+            <SettingsView />
           ) : (
             <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
           )}
