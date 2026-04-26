@@ -35,7 +35,11 @@ import {
   ZoomIn,
   ZoomOut,
   User,
-  Maximize
+  Maximize,
+  Filter,
+  ArrowRight,
+  ArrowUpRight,
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -51,7 +55,10 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis
+  YAxis,
+  AreaChart,
+  Area,
+  CartesianGrid
 } from 'recharts';
 
 // --- Utility for Tailwind classes ---
@@ -109,6 +116,319 @@ const INITIAL_PINS: Pin[] = [
   { id: 'ACT_VALVE_22', x: 60, y: 75, tipo: 'Activo', estado: 'Bloqueado', nombre: 'ACT-99' },
   { id: 'ZONA1_CAM08', x: 85, y: 20, tipo: 'Cámara', estado: 'Apagado', nombre: 'CAM-08' },
 ];
+
+// --- Components ---
+
+const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
+  const [selectedAlarm, setSelectedAlarm] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const alarmKPIs = [
+    { label: 'Alertas Totales', value: '1,284', trend: '+12%', color: 'text-white', data: [20, 35, 25, 45, 30, 55, 40] },
+    { label: 'Críticas', value: '24', trend: '+5%', color: 'text-[#F51E1E]', data: [5, 12, 8, 15, 10, 18, 14] },
+    { label: 'Tiempo Resp. (Avg)', value: '4.2m', trend: '-8%', color: 'text-siac-active', data: [8, 6, 7, 5, 6, 4, 5] },
+    { label: 'Resolución', value: '98.2%', trend: '+0.5%', color: 'text-siac-active', data: [95, 96, 94, 97, 98, 97, 98] },
+  ];
+
+  const alarmsData = [
+    { id: 'EV-8392', timestamp: '2026-04-26 14:22:10', activo: 'CAM-01', tipo: 'Camera', severidad: 'Crítico', color: '#F51E1E', ip: '192.168.1.101', ubicacion: 'ZONA_NORTE_01' },
+    { id: 'EV-8391', timestamp: '2026-04-26 14:18:05', activo: 'INF-02', tipo: 'Thermometer', severidad: 'Advertencia', color: '#D89A1E', ip: '192.168.1.105', ubicacion: 'PERIMETRO_B' },
+    { id: 'EV-8390', timestamp: '2026-04-26 14:05:44', activo: 'PIR-05', tipo: 'Radio', severidad: 'Informativo', color: '#4DC493', ip: '192.168.1.112', ubicacion: 'ALMACEN_CENTRAL' },
+    { id: 'EV-8389', timestamp: '2026-04-26 13:55:12', activo: 'GW-ALPHA', tipo: 'Cpu', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.45', ubicacion: 'SALA_SERVIDORES' },
+    { id: 'EV-8388', timestamp: '2026-04-26 13:42:30', activo: 'ACT-99', tipo: 'Activity', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.89', ubicacion: 'VALVULA_PRINCIPAL' },
+  ];
+
+  const renderIcon = (tipo: string) => {
+    switch(tipo) {
+      case 'Camera': return <Camera className="w-4 h-4" />;
+      case 'Thermometer': return <Thermometer className="w-4 h-4" />;
+      case 'Radio': return <Radio className="w-4 h-4" />;
+      case 'Cpu': return <Cpu className="w-4 h-4" />;
+      case 'Activity': return <Activity className="w-4 h-4" />;
+      default: return <Info className="w-4 h-4" />;
+    }
+  };
+
+  const activityData = [
+    { time: '14:12', val: 30 }, { time: '14:13', val: 35 }, { time: '14:14', val: 32 },
+    { time: '14:15', val: 85 }, { time: '14:16', val: 92 }, { time: '14:17', val: 88 },
+    { time: '14:18', val: 95 }, { time: '14:19', val: 90 }, { time: '14:20', val: 82 },
+    { time: '14:21', val: 88 }, { time: '14:22', val: 94 }
+  ];
+
+  return (
+    <div className="flex-1 flex flex-col p-8 gap-8 overflow-y-auto bg-industrial-950 relative">
+      {/* Header & KPI Bar */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-siac-blocked/10 rounded-lg">
+              <AlertTriangle className="w-6 h-6 text-siac-blocked" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Gestión de Alarmas</h1>
+              <p className="text-xs text-gray-500 uppercase font-mono tracking-widest">Product Intelligence Unit</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input 
+                type="text" 
+                placeholder="Buscar evento o activo..."
+                className="bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-active w-64 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button className="flex items-center gap-2 bg-industrial-900 border border-industrial-800 px-4 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition-all">
+              <Filter className="w-4 h-4" />
+              Filtrar
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {alarmKPIs.map((kpi, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-industrial-900 border border-industrial-800 p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-active/30 transition-all"
+            >
+              <div className="flex justify-between items-start z-10">
+                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">{kpi.label}</span>
+                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/20", kpi.trend.startsWith('+') ? 'text-siac-active' : 'text-siac-blocked')}>
+                  {kpi.trend}
+                </span>
+              </div>
+              <div className="flex items-end justify-between z-10">
+                <span className={cn("text-3xl font-black tracking-tighter", kpi.color)}>{kpi.value}</span>
+                <div className="h-8 w-24">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={kpi.data.map((v, i) => ({ v, i }))}>
+                      <Line type="monotone" dataKey="v" stroke={kpi.color.includes('siac-active') ? '#4DC493' : kpi.color.includes('siac-blocked') ? '#F51E1E' : '#FFFFFF'} strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Activity className="w-24 h-24 text-white" />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Alarms Table */}
+      <div className="flex-1 bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden flex flex-col">
+        <div className="bg-[#1F2937] px-6 py-4 flex items-center justify-between border-b border-industrial-800">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-widest text-white">Listado de Eventos en Tiempo Real</span>
+          </div>
+          <span className="text-[10px] font-mono text-gray-500 uppercase">Total: {alarmsData.length} registros</span>
+        </div>
+        
+        <div className="flex-1 overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-industrial-800">
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">ID Evento</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Timestamp</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Activo</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest text-center">Tipo</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Severidad</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {alarmsData.length > 0 ? alarmsData.map((alarm, i) => (
+                <motion.tr 
+                  key={alarm.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group hover:bg-white/[0.02] border-b border-industrial-800/50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedAlarm(alarm)}
+                >
+                  <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.id}</td>
+                  <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.timestamp}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-white uppercase">{alarm.activo}</td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="inline-flex p-1.5 bg-industrial-800 rounded-lg text-gray-500 group-hover:text-siac-active transition-colors">
+                      {renderIcon(alarm.tipo)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span 
+                      className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                      style={{ color: alarm.color, borderColor: `${alarm.color}40`, backgroundColor: `${alarm.color}10` }}
+                    >
+                      {alarm.severidad}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onNavigateToMap(); }}
+                        className="p-2 text-gray-500 hover:text-siac-active transition-all hover:bg-siac-active/10 rounded-lg"
+                        title="Ver en Mapa"
+                      >
+                        <MapIcon className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedAlarm(alarm); }}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-industrial-800 hover:bg-industrial-700 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
+                      >
+                        Detalle
+                        <ArrowUpRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </td>
+                </motion.tr>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="p-4 bg-industrial-800 rounded-full">
+                        <CheckCircle2 className="w-12 h-12 text-siac-active opacity-20" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-white font-bold uppercase tracking-widest">No hay alertas críticas en el sector</p>
+                        <p className="text-xs text-gray-500 font-mono uppercase">Todo el sistema opera dentro de los parámetros normales</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Detail Sidebar (Sheet) */}
+      <AnimatePresence>
+        {selectedAlarm && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedAlarm(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            />
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 right-0 h-full w-[450px] bg-[#1F2937] border-l border-siac-active/30 z-[70] shadow-2xl flex flex-col"
+            >
+              <div className="p-6 border-b border-industrial-800 flex items-center justify-between bg-industrial-950/50">
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-12 h-12 rounded-xl flex items-center justify-center border-2"
+                    style={{ borderColor: selectedAlarm.color, backgroundColor: `${selectedAlarm.color}10` }}
+                  >
+                    {renderIcon(selectedAlarm.tipo)}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white uppercase">{selectedAlarm.activo}</h3>
+                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">{selectedAlarm.id} • {selectedAlarm.severidad}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedAlarm(null)}
+                  className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {/* Asset Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-industrial-800">
+                    <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Dirección IP</p>
+                    <p className="text-xs font-mono text-white">{selectedAlarm.ip}</p>
+                  </div>
+                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-industrial-800">
+                    <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Ubicación Técnica</p>
+                    <p className="text-xs font-mono text-white">{selectedAlarm.ubicacion}</p>
+                  </div>
+                </div>
+
+                {/* Activity Chart */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Actividad (Últimos 10 min)</h4>
+                    <span className="text-[8px] font-mono text-gray-500 uppercase">Tiempo real • 100ms lag</span>
+                  </div>
+                  <div className="h-48 w-full bg-industrial-950/30 rounded-2xl border border-industrial-800 p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={activityData}>
+                        <defs>
+                          <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={selectedAlarm.color} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={selectedAlarm.color} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                        <XAxis dataKey="time" hide />
+                        <YAxis hide domain={[0, 100]} />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: '#161D31', border: 'none', borderRadius: '8px', fontSize: '10px' }}
+                          itemStyle={{ color: selectedAlarm.color }}
+                        />
+                        <Area type="monotone" dataKey="val" stroke={selectedAlarm.color} fillOpacity={1} fill="url(#colorVal)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Timeline */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Timeline de Eventos</h4>
+                  <div className="space-y-6 pl-2 relative">
+                    <div className="absolute left-2.5 top-2 bottom-2 w-px bg-industrial-800" />
+                    {[
+                      { time: '14:22:10', msg: 'Umbral de seguridad excedido (Crítico)', type: 'error' },
+                      { time: '14:20:05', msg: 'Incremento anómalo de actividad detectado', type: 'warn' },
+                      { time: '14:15:00', msg: 'Chequeo de sistema: OK', type: 'info' },
+                      { time: '13:42:30', msg: 'Inicio de sesión de monitoreo activo', type: 'info' },
+                    ].map((step, i) => (
+                      <div key={i} className="flex gap-4 relative z-10">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full mt-1.5 ring-4 ring-industrial-950",
+                          step.type === 'error' ? 'bg-siac-blocked' : step.type === 'warn' ? 'bg-[#D89A1E]' : 'bg-siac-active'
+                        )} />
+                        <div className="flex-1">
+                          <p className="text-[10px] font-mono text-gray-500 mb-1">{step.time}</p>
+                          <p className="text-xs text-white uppercase tracking-tight">{step.msg}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-industrial-800 bg-industrial-950/50 grid grid-cols-2 gap-4">
+                <button className="flex items-center justify-center gap-2 py-3 bg-industrial-800 hover:bg-industrial-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
+                  Generar Reporte
+                </button>
+                <button className="flex items-center justify-center gap-2 py-3 bg-siac-active hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
+                  Resolver Alarma
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 // --- Components ---
 
@@ -984,7 +1304,7 @@ const InteractiveMapView = () => {
 
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas'>('dashboard');
   const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
@@ -1081,7 +1401,13 @@ const Dashboard = () => {
           >
             <MapIcon className="w-5 h-5" /> Mapa
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all relative">
+          <button 
+            onClick={() => { setCurrentView('alarmas'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative",
+              currentView === 'alarmas' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
             <Bell className="w-5 h-5" /> Alarmas
             <span className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 bg-siac-blocked text-white text-[10px] flex items-center justify-center rounded-full font-bold">7</span>
           </button>
@@ -1170,6 +1496,15 @@ const Dashboard = () => {
                   Reportes
                 </span>
               </div>
+              {currentView === 'alarmas' && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                    <Bell className="w-3 h-3" />
+                    <span>Alarmas</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -1184,7 +1519,13 @@ const Dashboard = () => {
             >
               <LayoutDashboard className="w-4 h-4" />
             </button>
-            <button className="text-gray-500 hover:text-white transition-all">
+            <button 
+              onClick={() => setCurrentView('alarmas')}
+              className={cn(
+                "transition-all",
+                currentView === 'alarmas' ? "text-siac-green" : "text-gray-500 hover:text-white"
+              )}
+            >
               <Bell className="w-4 h-4" />
             </button>
             <div className="w-px h-4 bg-white/10" />
@@ -1224,10 +1565,16 @@ const Dashboard = () => {
               
               {/* Notifications with Badge */}
               <div className="relative group">
-                <button className="p-2 text-gray-400 group-hover:text-white transition-colors bg-industrial-800/50 rounded-lg border border-white/5">
+                <button 
+                  onClick={() => setCurrentView('alarmas')}
+                  className={cn(
+                    "p-2 transition-colors bg-industrial-800/50 rounded-lg border border-white/5",
+                    currentView === 'alarmas' ? "text-siac-green border-siac-green/30" : "text-gray-400 group-hover:text-white"
+                  )}
+                >
                   <Bell className="w-4 h-4" />
                 </button>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-siac-blocked text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-industrial-900">2</span>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-siac-blocked text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-industrial-900 pointer-events-none">2</span>
               </div>
             </div>
 
@@ -1624,6 +1971,8 @@ const Dashboard = () => {
             </div>
           ) : currentView === 'mapa' ? (
             <InteractiveMapView />
+          ) : currentView === 'alarmas' ? (
+            <AlarmsView onNavigateToMap={() => setCurrentView('mapa')} />
           ) : (
             <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
           )}
