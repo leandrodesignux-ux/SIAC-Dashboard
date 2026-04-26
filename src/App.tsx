@@ -25,11 +25,22 @@ import {
   Moon,
   ChevronLeft,
   Plus,
-  Minus
+  Minus,
+  Calendar,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  Tooltip as RechartsTooltip,
+  LineChart,
+  Line
+} from 'recharts';
 
 // --- Utility for Tailwind classes ---
 function cn(...inputs: ClassValue[]) {
@@ -235,8 +246,209 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
   );
 };
 
+// --- Reports View Component ---
+const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, setIsSearching: (v: boolean) => void }) => {
+  const donutData = [
+    { title: 'Cámaras', value: 85, color: '#0B986A' },
+    { title: 'Infrarrojos', value: 92, color: '#0B986A' },
+    { title: 'Puertas', value: 78, color: '#0B986A' },
+  ];
+
+  const trendData = [
+    { day: 'Lun', val: 45 },
+    { day: 'Mar', val: 52 },
+    { day: 'Mie', val: 48 },
+    { day: 'Jue', val: 70 },
+    { day: 'Vie', val: 61 },
+    { day: 'Sab', val: 38 },
+    { day: 'Dom', val: 40 },
+  ];
+
+  const handleSearch = () => {
+    setIsSearching(true);
+    setTimeout(() => setIsSearching(false), 2000);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      {/* Search Bar */}
+      <div className="bg-industrial-900 p-4 rounded-xl border border-white/10 flex flex-wrap items-center gap-4">
+        <div className="flex-1 min-w-[240px]">
+          <div className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">Búsqueda por fecha</div>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-siac-green" />
+            <input 
+              type="text" 
+              defaultValue="25-04-2026"
+              className="w-full bg-[#283046] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green transition-all font-mono text-white"
+            />
+          </div>
+        </div>
+        <div className="flex items-end h-full">
+          <button 
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="bg-siac-active hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center"
+          >
+            {isSearching ? (
+              <>
+                <div className="w-4 h-4 border-2 border-industrial-950 border-t-transparent rounded-full animate-spin" />
+                Cargando...
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4" />
+                Buscar
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Main Report Card */}
+      <div className="bg-industrial-900 rounded-xl border border-white/10 overflow-hidden">
+        <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2">
+          <FileText className="w-4 h-4 text-siac-green" />
+          <span className="text-sm font-bold uppercase tracking-widest">Reporte Operativo Detallado</span>
+        </div>
+        
+        <div className="p-6 space-y-8">
+          {/* Equipamiento Donuts */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Estado de Equipamiento</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {donutData.map((data, idx) => (
+                <div key={idx} className="bg-industrial-900 border border-white/10 rounded-xl p-6 flex flex-col items-center group hover:border-siac-green/30 transition-all shadow-lg">
+                  <span className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-wider">{data.title}</span>
+                  <div className="w-32 h-32 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { value: data.value || 0 },
+                            { value: 100 - (data.value || 0) }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={35}
+                          outerRadius={45}
+                          paddingAngle={0}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          <Cell fill={data.color} />
+                          <Cell fill="rgba(255,255,255,0.05)" />
+                        </Pie>
+                        <RechartsTooltip 
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-industrial-900 border border-white/10 p-2 rounded shadow-xl text-[10px] font-bold">
+                                  {payload[0].value}% Activo
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-xl font-bold text-white">{data.value || 0}%</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-siac-armed" />
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Funcionamiento</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tendencia Operativa Sparklines */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Tendencia Operativa</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Alarmas Sparkline */}
+              <div className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <h5 className="text-[10px] font-bold text-gray-500 uppercase">Total de alarmas (7d)</h5>
+                    <div className="text-2xl font-bold text-white">124</div>
+                  </div>
+                  <div className="w-32 h-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendData}>
+                        <Line 
+                          type="monotone" 
+                          dataKey="val" 
+                          stroke="#4DC493" 
+                          strokeWidth={2} 
+                          dot={false} 
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-siac-blocked/10 rounded-lg">
+                      <AlertTriangle className="w-3 h-3 text-siac-blocked" />
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">Incidencias Críticas</span>
+                  </div>
+                  <span className="text-xs font-bold text-siac-blocked">+12% vs sem. ant.</span>
+                </div>
+              </div>
+
+              {/* Tiempos Sparkline */}
+              <div className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <h5 className="text-[10px] font-bold text-gray-500 uppercase">Tiempo de respuesta prom.</h5>
+                    <div className="text-2xl font-bold text-white">1.8 min</div>
+                  </div>
+                  <div className="w-32 h-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendData.map(d => ({ ...d, val: 100 - d.val }))}>
+                        <Line 
+                          type="monotone" 
+                          dataKey="val" 
+                          stroke="#4DC493" 
+                          strokeWidth={2} 
+                          dot={false} 
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-siac-active/10 rounded-lg">
+                      <Clock className="w-3 h-3 text-siac-active" />
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">Eficiencia Operativa</span>
+                  </div>
+                  <span className="text-xs font-bold text-siac-active">ÓPTIMO</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes'>('dashboard');
+  const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
@@ -314,7 +526,13 @@ const Dashboard = () => {
         </div>
         
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <button className="w-full flex items-center gap-3 px-4 py-3 bg-siac-green/10 text-siac-green rounded-lg font-bold transition-all">
+          <button 
+            onClick={() => setCurrentView('dashboard')}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all",
+              currentView === 'dashboard' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
             <LayoutDashboard className="w-5 h-5" /> Dashboard
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
@@ -323,6 +541,15 @@ const Dashboard = () => {
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all relative">
             <Bell className="w-5 h-5" /> Alarmas
             <span className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 bg-siac-blocked text-white text-[10px] flex items-center justify-center rounded-full font-bold">7</span>
+          </button>
+          <button 
+            onClick={() => setCurrentView('reportes')}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
+              currentView === 'reportes' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
+            <FileText className="w-5 h-5" /> Reportes
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
             <Activity className="w-5 h-5" /> Seguimiento
@@ -359,22 +586,55 @@ const Dashboard = () => {
             
             {/* Breadcrumb / Title */}
             <div className="flex items-center gap-3">
-              <span className="text-gray-500 text-xs font-medium uppercase tracking-widest">Dashboard</span>
-              <ChevronRight className="w-3 h-3 text-gray-600" />
-              <span className="text-white text-sm font-bold uppercase tracking-widest">Reportes</span>
+              <div 
+                onClick={() => setCurrentView('dashboard')}
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 cursor-pointer hover:text-white transition-colors"
+              >
+                <LayoutDashboard className="w-3 h-3" />
+                <span>Dashboard</span>
+              </div>
+              <ChevronRight className="w-3 h-3 text-gray-700" />
+              <div 
+                onClick={() => setCurrentView('reportes')}
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer group"
+              >
+                <FileText className={cn(
+                  "w-3 h-3 transition-colors",
+                  currentView === 'reportes' ? "text-siac-green" : "text-gray-500 group-hover:text-siac-green"
+                )} />
+                <span className={cn(
+                  "transition-colors",
+                  currentView === 'reportes' ? "text-siac-green" : "text-white hover:text-siac-green"
+                )}
+                >
+                  Reportes
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Center Navigation Icons */}
           <div className="hidden lg:flex items-center bg-industrial-800/50 px-4 py-1.5 rounded-full border border-white/5 gap-6">
-            <button className="text-siac-green hover:brightness-110 transition-all">
+            <button 
+              onClick={() => setCurrentView('dashboard')}
+              className={cn(
+                "transition-all",
+                currentView === 'dashboard' ? "text-siac-green" : "text-gray-500 hover:text-white"
+              )}
+            >
               <LayoutDashboard className="w-4 h-4" />
             </button>
             <button className="text-gray-500 hover:text-white transition-all">
               <Bell className="w-4 h-4" />
             </button>
             <div className="w-px h-4 bg-white/10" />
-            <button className="text-gray-500 hover:text-white transition-all">
+            <button 
+              onClick={() => setCurrentView('reportes')}
+              className={cn(
+                "transition-all",
+                currentView === 'reportes' ? "text-siac-green" : "text-gray-500 hover:text-white"
+              )}
+            >
               <FileText className="w-4 h-4" />
             </button>
             <button className="text-gray-500 hover:text-white transition-all">
@@ -422,373 +682,379 @@ const Dashboard = () => {
 
         {/* Dashboard Body */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8">
-          {/* KPI Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {kpis.map(kpi => (
-              <KPICard 
-                key={kpi.id} 
-                kpi={kpi} 
-                active={activeFilter === kpi.id} 
-                onClick={() => setActiveFilter(activeFilter === kpi.id ? 'Todos' : kpi.id)}
-              />
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
-            {/* Map Container */}
-            <div className="xl:col-span-2 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                  <MapIcon className="w-5 h-5 text-siac-green" /> Mapa de Instalaciones
-                </h3>
-                <button className="p-2 hover:bg-industrial-800 rounded-lg transition-colors text-gray-500 hover:text-white">
-                  <Maximize2 className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="aspect-video bg-industrial-900 rounded-2xl border border-white/5 relative overflow-hidden group">
-                {/* Blueprint / Technical Grid Background */}
-                <div className="absolute inset-0 opacity-20 pointer-events-none" 
-                  style={{ 
-                    backgroundImage: `
-                      linear-gradient(to right, #4f4f4f 1px, transparent 1px),
-                      linear-gradient(to bottom, #4f4f4f 1px, transparent 1px)
-                    `,
-                    backgroundSize: '40px 40px'
-                  }} 
-                />
-                <div className="absolute inset-0 opacity-10 pointer-events-none" 
-                  style={{ 
-                    backgroundImage: `
-                      linear-gradient(to right, #4f4f4f 1px, transparent 1px),
-                      linear-gradient(to bottom, #4f4f4f 1px, transparent 1px)
-                    `,
-                    backgroundSize: '8px 8px'
-                  }} 
-                />
-                
-                {/* Minimal Dark Map Texture */}
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(22,29,49,0.4)_100%)]" />
-                
-                {/* Map Pins */}
-                <AnimatePresence>
-                  {pins?.map((pin) => (
-                    <motion.div
-                      key={pin.id}
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="absolute -translate-x-1/2 -translate-y-full cursor-pointer z-10 group"
-                      style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedPin(pin);
-                      }}
-                    >
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-industrial-950 border border-white/10 rounded text-[10px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                        {pin.id || 'N/A'}
-                      </div>
-
-                      <div className="relative">
-                        {/* Status Ping Animation for Active/Alarmed states */}
-                        {(pin.estado === 'Alarmado' || pin.estado === 'Armado') && (
-                          <div className={cn(
-                            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full animate-ping opacity-20",
-                            pin.estado === 'Alarmado' ? "bg-siac-alarmed" : "bg-siac-armed"
-                          )} />
-                        )}
-
-                        {/* PIN SHAPE (Gota) */}
-                        <div className={cn(
-                          "relative w-8 h-10 transition-all duration-300 transform drop-shadow-lg",
-                          selectedPin?.id === pin.id ? "scale-125 -translate-y-1" : "hover:scale-110 hover:-translate-y-1"
-                        )}>
-                          <svg viewBox="0 0 24 30" className="w-full h-full drop-shadow-md">
-                            <path 
-                              d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" 
-                              className={cn(
-                                "transition-colors duration-300",
-                                pin.estado === 'Apagado' ? "fill-siac-off" :
-                                pin.estado === 'Armado' ? "fill-siac-armed" :
-                                pin.estado === 'Activo' ? "fill-siac-active" :
-                                pin.estado === 'Des-armado' ? "fill-siac-disarmed" :
-                                pin.estado === 'Alarmado' ? "fill-siac-alarmed" :
-                                "fill-siac-blocked"
-                              )}
-                            />
-                            <circle cx="12" cy="12" r="9" fill="black" fillOpacity="0.15" />
-                          </svg>
-
-                          {/* ICON INSIDE PIN */}
-                          <div className="absolute top-[7px] left-1/2 -translate-x-1/2 text-white">
-                            {pin.tipo === 'Cámara' && <Camera className="w-3.5 h-3.5" />}
-                            {pin.tipo === 'Infrarrojo' && <Thermometer className="w-3.5 h-3.5" />}
-                            {pin.tipo === 'PIR' && <Radio className="w-3.5 h-3.5" />}
-                            {pin.tipo === 'GW' && <Cpu className="w-3.5 h-3.5" />}
-                            {pin.tipo === 'Activo' && <Activity className="w-3.5 h-3.5" />}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-
-                {/* Map Legend */}
-                <div className="hidden sm:block absolute bottom-4 left-4 bg-industrial-950/90 backdrop-blur-md p-3 md:p-4 rounded-xl border border-white/5 shadow-2xl z-20">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <div className="w-1 h-3 bg-siac-armed rounded-full" />
-                    LEYENDA
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    {[
-                      { label: 'Apagado', color: 'bg-siac-off' },
-                      { label: 'Armado', color: 'bg-siac-armed' },
-                      { label: 'Activo', color: 'bg-siac-active' },
-                      { label: 'Desarmado', color: 'bg-siac-disarmed' },
-                      { label: 'Alarmado', color: 'bg-siac-alarmed' },
-                      { label: 'Bloqueado', color: 'bg-siac-blocked' },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center gap-2">
-                        <div className={cn("w-2 h-2 rounded-full", item.color)} />
-                        <span className="text-[10px] font-medium text-gray-300">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Map Controls */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
-                  <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
-                    <Maximize2 className="w-4 h-4" />
-                  </button>
-                  <div className="w-px h-4 bg-white/5 mx-auto" />
-                  <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
-                    <Plus className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
-                    <Minus className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Selected Pin Info (CCTV Overlay) */}
-                <AnimatePresence>
-                  {selectedPin && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                      className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-[450px] bg-industrial-900/95 backdrop-blur-xl border border-white/10 rounded-2xl z-40 shadow-2xl overflow-hidden"
-                    >
-                      {/* CCTV Header */}
-                      <div className="p-4 border-b border-white/5 flex items-center justify-between bg-industrial-950/50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-siac-blocked animate-pulse" />
-                          <span className="text-xs font-bold uppercase tracking-widest text-gray-200">LIVE: {selectedPin.nombre}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono text-gray-500">ID: {selectedPin.id}</span>
-                          <button 
-                            onClick={() => setSelectedPin(null)}
-                            className="p-1 hover:bg-siac-blocked/20 text-gray-500 hover:text-siac-blocked rounded-md transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Video Placeholder */}
-                      <div className="aspect-video bg-black relative group/cctv">
-                        <img 
-                          src="https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&q=80&w=800" 
-                          alt="CCTV Feed" 
-                          className="w-full h-full object-cover opacity-60 grayscale sepia-[.2]"
-                        />
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/scan-lines.png')] opacity-30 pointer-events-none" />
-                        
-                        {/* CCTV HUD */}
-                        <div className="absolute top-4 left-4 text-[10px] font-mono text-siac-armed/80">
-                          REC ● 24-04-2026 16:32:11
-                        </div>
-                        <div className="absolute bottom-4 right-4 text-[10px] font-mono text-siac-armed/80">
-                          CAM_SEC_0{selectedPin.id.slice(-1)}
-                        </div>
-
-                        {/* Navigation Controls */}
-                        <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 opacity-0 group-hover/cctv:opacity-100 transition-opacity">
-                          <button className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all">
-                            <ChevronLeft className="w-5 h-5" />
-                          </button>
-                          <button className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all">
-                            <ChevronRight className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Footer Info */}
-                      <div className="p-4 grid grid-cols-3 gap-4 bg-industrial-950/30">
-                        <div className="space-y-1">
-                          <span className="text-[8px] text-gray-500 uppercase font-bold">Estado</span>
-                          <div className={cn(
-                            "text-[10px] font-bold",
-                            selectedPin.estado === 'Alarmado' ? "text-siac-blocked" : "text-siac-armed"
-                          )}>{selectedPin.estado.toUpperCase()}</div>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-[8px] text-gray-500 uppercase font-bold">Tipo</span>
-                          <div className="text-[10px] font-bold text-gray-200">{selectedPin.tipo.toUpperCase()}</div>
-                        </div>
-                        <div className="flex items-end justify-end">
-                          <button className="px-3 py-1.5 bg-siac-armed text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all">
-                            PROTOCOLO
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {/* Installation Status */}
-            <div className="space-y-4">
-              <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-siac-green" /> Instalaciones
-              </h3>
-              <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
-                <div className="p-4 border-b border-white/5 bg-industrial-800/30">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  {pins?.map((pin, i) => (
-                    <div key={pin.id || i} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
-                      <div className="flex flex-col">
-                        <span className="font-mono text-[10px] text-gray-500">{pin.id || 'N/A'}</span>
-                        <span className="font-bold text-xs">{pin.nombre || 'Sin nombre'}</span>
-                      </div>
-                      <div className="flex justify-center">
-                        <div className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-bold border",
-                          (pin.estado === 'Alarmado' || pin.estado === 'Bloqueado')
-                            ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/20" 
-                            : pin.estado === 'Apagado'
-                            ? "bg-siac-off/10 text-siac-off border-siac-off/20"
-                            : "bg-siac-armed/10 text-siac-armed border-siac-armed/20"
-                        )}>
-                          {(pin.estado || 'DESCONOCIDO').toUpperCase()}
-                        </div>
-                      </div>
-                      <span className="text-right text-[10px] text-gray-500 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4 bg-industrial-800/20 border-t border-white/5 flex justify-between items-center text-xs shrink-0">
-                  <span className="text-gray-500">Total: {pins?.length || 0} dispositivos</span>
-                  <div className="flex gap-1">
-                    <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">1</button>
-                    <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">2</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Alarms Table */}
-            <div className="xl:col-span-3 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-siac-blocked" /> Listado de Alarmas
-                  <span className="bg-siac-blocked/10 text-siac-blocked px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono">{filteredAlarms.length} eventos</span>
-                </h3>
-                <div className="flex items-center gap-2 md:gap-4">
-                  <div className="relative flex-1 sm:flex-initial">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input 
-                      type="text" 
-                      placeholder="Buscar evento..." 
-                      className="w-full bg-industrial-900 border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-armed sm:w-48 lg:w-64"
-                    />
-                  </div>
-                  <button className="bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
-                    Exportar
-                  </button>
-                </div>
+          {currentView === 'dashboard' ? (
+            <div className="space-y-6 md:space-y-8">
+              {/* KPI Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {kpis.map(kpi => (
+                  <KPICard 
+                    key={kpi.id} 
+                    kpi={kpi} 
+                    active={activeFilter === kpi.id} 
+                    onClick={() => setActiveFilter(activeFilter === kpi.id ? 'Todos' : kpi.id)}
+                  />
+                ))}
               </div>
 
-              <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden">
-                <div className="p-4 bg-industrial-800/30 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide">
-                  {['Todos', 'Cámara', 'Infrarrojo', 'PIR', 'GW', 'Activo'].map((f) => (
-                    <button 
-                      key={f}
-                      onClick={() => setActiveFilter(f as any)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border",
-                        activeFilter === f 
-                          ? "bg-siac-armed text-industrial-950 border-siac-armed" 
-                          : "bg-industrial-800 text-gray-400 border-white/5 hover:border-gray-600"
-                      )}
-                    >
-                      {f}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
+                {/* Map Container */}
+                <div className="xl:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
+                      <MapIcon className="w-5 h-5 text-siac-green" /> Mapa de Instalaciones
+                    </h3>
+                    <button className="p-2 hover:bg-industrial-800 rounded-lg transition-colors text-gray-500 hover:text-white">
+                      <Maximize2 className="w-5 h-5" />
                     </button>
-                  ))}
-                </div>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                        <th className="px-6 py-4">Evento ID</th>
-                        <th className="px-6 py-4">Fecha / Hora</th>
-                        <th className="px-6 py-4">Dispositivo</th>
-                        <th className="px-6 py-4 text-center">Estado</th>
-                        <th className="px-6 py-4">Ubicación</th>
-                        <th className="px-6 py-4">Descripción</th>
-                        <th className="px-6 py-4"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-xs">
-                      {filteredAlarms.map((alarm) => (
-                        <tr 
-                          key={alarm.id} 
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                  </div>
+                  
+                  <div className="aspect-video bg-industrial-900 rounded-2xl border border-white/5 relative overflow-hidden group">
+                    {/* Blueprint / Technical Grid Background */}
+                    <div className="absolute inset-0 opacity-20 pointer-events-none" 
+                      style={{ 
+                        backgroundImage: `
+                          linear-gradient(to right, #4f4f4f 1px, transparent 1px),
+                          linear-gradient(to bottom, #4f4f4f 1px, transparent 1px)
+                        `,
+                        backgroundSize: '40px 40px'
+                      }} 
+                    />
+                    <div className="absolute inset-0 opacity-10 pointer-events-none" 
+                      style={{ 
+                        backgroundImage: `
+                          linear-gradient(to right, #4f4f4f 1px, transparent 1px),
+                          linear-gradient(to bottom, #4f4f4f 1px, transparent 1px)
+                        `,
+                        backgroundSize: '8px 8px'
+                      }} 
+                    />
+                    
+                    {/* Minimal Dark Map Texture */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(22,29,49,0.4)_100%)]" />
+                    
+                    {/* Map Pins */}
+                    <AnimatePresence>
+                      {pins?.map((pin) => (
+                        <motion.div
+                          key={pin.id}
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="absolute -translate-x-1/2 -translate-y-full cursor-pointer z-10 group"
+                          style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPin(pin);
+                          }}
                         >
-                          <td className="px-6 py-4 font-mono text-gray-400">#EV-{alarm.id}024</td>
-                          <td className="px-6 py-4 text-gray-300">{alarm.fecha}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 bg-industrial-800 rounded-lg border border-white/5">
-                                {alarm.tipo === 'Cámara' && <Camera className="w-3 h-3" />}
-                                {alarm.tipo === 'Infrarrojo' && <Thermometer className="w-3 h-3" />}
-                                {alarm.tipo === 'PIR' && <Radio className="w-3 h-3" />}
-                                {alarm.tipo === 'GW' && <Cpu className="w-3 h-3" />}
-                                {alarm.tipo === 'Activo' && <Activity className="w-3 h-3" />}
-                              </div>
-                              <span className="font-bold">{alarm.dispositivo}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={cn(
-                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border",
-                              alarm.estado === 'RESUELTO' 
-                                ? "bg-siac-armed/10 text-siac-armed border-siac-armed/20" 
-                                : "bg-siac-disarmed/10 text-siac-disarmed border-siac-disarmed/20"
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-industrial-950 border border-white/10 rounded text-[10px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                            {pin.id || 'N/A'}
+                          </div>
+
+                          <div className="relative">
+                            {/* Status Ping Animation for Active/Alarmed states */}
+                            {(pin.estado === 'Alarmado' || pin.estado === 'Armado') && (
+                              <div className={cn(
+                                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full animate-ping opacity-20",
+                                pin.estado === 'Alarmado' ? "bg-siac-alarmed" : "bg-siac-armed"
+                              )} />
+                            )}
+
+                            {/* PIN SHAPE (Gota) */}
+                            <div className={cn(
+                              "relative w-8 h-10 transition-all duration-300 transform drop-shadow-lg",
+                              selectedPin?.id === pin.id ? "scale-125 -translate-y-1" : "hover:scale-110 hover:-translate-y-1"
                             )}>
-                              {alarm.estado === 'RESUELTO' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                              {alarm.estado}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-gray-400">{alarm.ubicacion}</td>
-                          <td className="px-6 py-4 text-gray-300 italic">"{alarm.descripcion}"</td>
-                          <td className="px-6 py-4 text-right">
-                            <button className="text-siac-armed text-[10px] font-bold hover:underline">Ver</button>
-                          </td>
-                        </tr>
+                              <svg viewBox="0 0 24 30" className="w-full h-full drop-shadow-md">
+                                <path 
+                                  d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" 
+                                  className={cn(
+                                    "transition-colors duration-300",
+                                    pin.estado === 'Apagado' ? "fill-siac-off" :
+                                    pin.estado === 'Armado' ? "fill-siac-armed" :
+                                    pin.estado === 'Activo' ? "fill-siac-active" :
+                                    pin.estado === 'Des-armado' ? "fill-siac-disarmed" :
+                                    pin.estado === 'Alarmado' ? "fill-siac-alarmed" :
+                                    "fill-siac-blocked"
+                                  )}
+                                />
+                                <circle cx="12" cy="12" r="9" fill="black" fillOpacity="0.15" />
+                              </svg>
+
+                              {/* ICON INSIDE PIN */}
+                              <div className="absolute top-[7px] left-1/2 -translate-x-1/2 text-white">
+                                {pin.tipo === 'Cámara' && <Camera className="w-3.5 h-3.5" />}
+                                {pin.tipo === 'Infrarrojo' && <Thermometer className="w-3.5 h-3.5" />}
+                                {pin.tipo === 'PIR' && <Radio className="w-3.5 h-3.5" />}
+                                {pin.tipo === 'GW' && <Cpu className="w-3.5 h-3.5" />}
+                                {pin.tipo === 'Activo' && <Activity className="w-3.5 h-3.5" />}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
                       ))}
-                    </tbody>
-                  </table>
+                    </AnimatePresence>
+
+                    {/* Map Legend */}
+                    <div className="hidden sm:block absolute bottom-4 left-4 bg-industrial-950/90 backdrop-blur-md p-3 md:p-4 rounded-xl border border-white/5 shadow-2xl z-20">
+                      <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <div className="w-1 h-3 bg-siac-armed rounded-full" />
+                        LEYENDA
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        {[
+                          { label: 'Apagado', color: 'bg-siac-off' },
+                          { label: 'Armado', color: 'bg-siac-armed' },
+                          { label: 'Activo', color: 'bg-siac-active' },
+                          { label: 'Desarmado', color: 'bg-siac-disarmed' },
+                          { label: 'Alarmado', color: 'bg-siac-alarmed' },
+                          { label: 'Bloqueado', color: 'bg-siac-blocked' },
+                        ].map((item) => (
+                          <div key={item.label} className="flex items-center gap-2">
+                            <div className={cn("w-2 h-2 rounded-full", item.color)} />
+                            <span className="text-[10px] font-medium text-gray-300">{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Map Controls */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+                      <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
+                      <div className="w-px h-4 bg-white/5 mx-auto" />
+                      <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                      <button className="p-2 bg-industrial-950/80 border border-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Selected Pin Info (CCTV Overlay) */}
+                    <AnimatePresence>
+                      {selectedPin && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                          className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-[450px] bg-industrial-900/95 backdrop-blur-xl border border-white/10 rounded-2xl z-40 shadow-2xl overflow-hidden"
+                        >
+                          {/* CCTV Header */}
+                          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-industrial-950/50">
+                            <div className="flex items-center gap-3">
+                              <div className="w-2 h-2 rounded-full bg-siac-blocked animate-pulse" />
+                              <span className="text-xs font-bold uppercase tracking-widest text-gray-200">LIVE: {selectedPin.nombre}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono text-gray-500">ID: {selectedPin.id}</span>
+                              <button 
+                                onClick={() => setSelectedPin(null)}
+                                className="p-1 hover:bg-siac-blocked/20 text-gray-500 hover:text-siac-blocked rounded-md transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Video Placeholder */}
+                          <div className="aspect-video bg-black relative group/cctv">
+                            <img 
+                              src="https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&q=80&w=800" 
+                              alt="CCTV Feed" 
+                              className="w-full h-full object-cover opacity-60 grayscale sepia-[.2]"
+                            />
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/scan-lines.png')] opacity-30 pointer-events-none" />
+                            
+                            {/* CCTV HUD */}
+                            <div className="absolute top-4 left-4 text-[10px] font-mono text-siac-armed/80">
+                              REC ● 24-04-2026 16:32:11
+                            </div>
+                            <div className="absolute bottom-4 right-4 text-[10px] font-mono text-siac-armed/80">
+                              CAM_SEC_0{selectedPin.id.slice(-1)}
+                            </div>
+
+                            {/* Navigation Controls */}
+                            <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 opacity-0 group-hover/cctv:opacity-100 transition-opacity">
+                              <button className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all">
+                                <ChevronLeft className="w-5 h-5" />
+                              </button>
+                              <button className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all">
+                                <ChevronRight className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Footer Info */}
+                          <div className="p-4 grid grid-cols-3 gap-4 bg-industrial-950/30">
+                            <div className="space-y-1">
+                              <span className="text-[8px] text-gray-500 uppercase font-bold">Estado</span>
+                              <div className={cn(
+                                "text-[10px] font-bold",
+                                selectedPin.estado === 'Alarmado' ? "text-siac-blocked" : "text-siac-armed"
+                              )}>{selectedPin.estado.toUpperCase()}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[8px] text-gray-500 uppercase font-bold">Tipo</span>
+                              <div className="text-[10px] font-bold text-gray-200">{selectedPin.tipo.toUpperCase()}</div>
+                            </div>
+                            <div className="flex items-end justify-end">
+                              <button className="px-3 py-1.5 bg-siac-armed text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all">
+                                PROTOCOLO
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Installation Status */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
+                    <Cpu className="w-5 h-5 text-siac-green" /> Instalaciones
+                  </h3>
+                  <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
+                    <div className="p-4 border-b border-white/5 bg-industrial-800/30">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      {pins?.map((pin, i) => (
+                        <div key={pin.id || i} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
+                          <div className="flex flex-col">
+                            <span className="font-mono text-[10px] text-gray-500">{pin.id || 'N/A'}</span>
+                            <span className="font-bold text-xs">{pin.nombre || 'Sin nombre'}</span>
+                          </div>
+                          <div className="flex justify-center">
+                            <div className={cn(
+                              "px-2 py-0.5 rounded text-[10px] font-bold border",
+                              (pin.estado === 'Alarmado' || pin.estado === 'Bloqueado')
+                                ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/20" 
+                                : pin.estado === 'Apagado'
+                                ? "bg-siac-off/10 text-siac-off border-siac-off/20"
+                                : "bg-siac-armed/10 text-siac-armed border-siac-armed/20"
+                            )}>
+                              {(pin.estado || 'DESCONOCIDO').toUpperCase()}
+                            </div>
+                          </div>
+                          <span className="text-right text-[10px] text-gray-500 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 bg-industrial-800/20 border-t border-white/5 flex justify-between items-center text-xs shrink-0">
+                      <span className="text-gray-500">Total: {pins?.length || 0} dispositivos</span>
+                      <div className="flex gap-1">
+                        <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">1</button>
+                        <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">2</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alarms Table */}
+                <div className="xl:col-span-3 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-siac-blocked" /> Listado de Alarmas
+                      <span className="bg-siac-blocked/10 text-siac-blocked px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono">{filteredAlarms.length} eventos</span>
+                    </h3>
+                    <div className="flex items-center gap-2 md:gap-4">
+                      <div className="relative flex-1 sm:flex-initial">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input 
+                          type="text" 
+                          placeholder="Buscar evento..." 
+                          className="w-full bg-industrial-900 border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-armed sm:w-48 lg:w-64"
+                        />
+                      </div>
+                      <button className="bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
+                        Exportar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden">
+                    <div className="p-4 bg-industrial-800/30 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide">
+                      {['Todos', 'Cámara', 'Infrarrojo', 'PIR', 'GW', 'Activo'].map((f) => (
+                        <button 
+                          key={f}
+                          onClick={() => setActiveFilter(f as any)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border",
+                            activeFilter === f 
+                              ? "bg-siac-armed text-industrial-950 border-siac-armed" 
+                              : "bg-industrial-800 text-gray-400 border-white/5 hover:border-gray-600"
+                          )}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                            <th className="px-6 py-4">Evento ID</th>
+                            <th className="px-6 py-4">Fecha / Hora</th>
+                            <th className="px-6 py-4">Dispositivo</th>
+                            <th className="px-6 py-4 text-center">Estado</th>
+                            <th className="px-6 py-4">Ubicación</th>
+                            <th className="px-6 py-4">Descripción</th>
+                            <th className="px-6 py-4"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-xs">
+                          {filteredAlarms.map((alarm) => (
+                            <tr 
+                              key={alarm.id} 
+                              className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                            >
+                              <td className="px-6 py-4 font-mono text-gray-400">#EV-{alarm.id}024</td>
+                              <td className="px-6 py-4 text-gray-300">{alarm.fecha}</td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="p-1.5 bg-industrial-800 rounded-lg border border-white/5">
+                                    {alarm.tipo === 'Cámara' && <Camera className="w-3 h-3" />}
+                                    {alarm.tipo === 'Infrarrojo' && <Thermometer className="w-3 h-3" />}
+                                    {alarm.tipo === 'PIR' && <Radio className="w-3 h-3" />}
+                                    {alarm.tipo === 'GW' && <Cpu className="w-3 h-3" />}
+                                    {alarm.tipo === 'Activo' && <Activity className="w-3 h-3" />}
+                                  </div>
+                                  <span className="font-bold">{alarm.dispositivo}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={cn(
+                                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border",
+                                  alarm.estado === 'RESUELTO' 
+                                    ? "bg-siac-armed/10 text-siac-armed border-siac-armed/20" 
+                                    : "bg-siac-disarmed/10 text-siac-disarmed border-siac-disarmed/20"
+                                )}>
+                                  {alarm.estado === 'RESUELTO' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                                  {alarm.estado}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-gray-400">{alarm.ubicacion}</td>
+                              <td className="px-6 py-4 text-gray-300 italic">"{alarm.descripcion}"</td>
+                              <td className="px-6 py-4 text-right">
+                                <button className="text-siac-armed text-[10px] font-bold hover:underline">Ver</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
+          )}
         </div>
       </main>
     </div>
