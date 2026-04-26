@@ -27,7 +27,15 @@ import {
   Plus,
   Minus,
   Calendar,
-  ChevronDown
+  ChevronDown,
+  Sun,
+  Smartphone,
+  Tractor,
+  Shirt,
+  ZoomIn,
+  ZoomOut,
+  User,
+  Maximize
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -620,9 +628,291 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
   );
 };
 
+// --- Interactive Map View Component ---
+const InteractiveMapView = () => {
+  const [selectedCamera, setSelectedCamera] = useState<any>(null);
+  const [isAlarmsCollapsed, setIsAlarmsCollapsed] = useState(false);
+  
+  const mapPins = [
+    { id: '1', x: 25, y: 55, tipo: 'Cámara', estado: 'Apagado', label: 'ZONAS_POLN1' },
+    { id: '2', x: 32, y: 48, tipo: 'Smartphone', estado: 'Alarmado', label: 'ZONAS_POLN1' },
+    { id: '3', x: 42, y: 62, tipo: 'Smartphone', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '4', x: 45, y: 40, tipo: 'Shirt', estado: 'Apagado', label: 'ZONAS_POLN1' },
+    { id: '5', x: 50, y: 55, tipo: 'Tractor', estado: 'Des-armado', label: 'ZONAS_POLN1' },
+    { id: '6', x: 58, y: 52, tipo: 'Shirt', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '7', x: 50, y: 30, tipo: 'Radio', estado: 'Bloqueado', label: 'ZONAS_POLN1' },
+    { id: '8', x: 62, y: 45, tipo: 'Sun', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '9', x: 70, y: 38, tipo: 'Radio', estado: 'Apagado', label: 'ZONAS_POLN1' },
+    { id: '10', x: 75, y: 52, tipo: 'Camera', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '11', x: 80, y: 45, tipo: 'Sun', estado: 'Armado', label: 'ZONAS_POLN1' },
+    { id: '12', x: 90, y: 30, tipo: 'Radio', estado: 'Apagado', label: 'ZONAS_POLN1' },
+  ];
+
+  const alarms = [
+    { fecha: '2024-04-19 02:42:13', estado: 'Pendiente', dispositivo: 'ZONA5_POLN1', ubicacion: 'ZONA5_POL1' },
+    { fecha: '2024-04-19 02:42:13', estado: 'Activo', dispositivo: 'ZONA4_POLN1', ubicacion: 'ZONA5_POL1' },
+  ];
+
+  const statusColors = {
+    'Apagado': '#4A4949',
+    'Armado': '#0B986A',
+    'Des-armado': '#D89A1E',
+    'Alarmado': '#FAD92A',
+    'Bloqueado': '#F51E1E',
+  };
+
+  const renderIcon = (tipo: string) => {
+    switch (tipo) {
+      case 'Cámara':
+      case 'Camera': return <Camera className="w-4 h-4" />;
+      case 'Radio': return <Radio className="w-4 h-4" />;
+      case 'Sun': return <Sun className="w-4 h-4" />;
+      case 'Smartphone': return <Smartphone className="w-4 h-4" />;
+      case 'Shirt': return <Shirt className="w-4 h-4" />;
+      case 'Tractor': return <Tractor className="w-4 h-4" />;
+      default: return <Radio className="w-4 h-4" />;
+    }
+  };
+
+  return (
+    <div className="flex-1 relative bg-[#E5E7EB] overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+      {/* Map Background Simulation */}
+      <div className="absolute inset-0 z-0 opacity-40 mix-blend-multiply pointer-events-none">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/gray-paper.png')]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.1)_100%)]" />
+      </div>
+      
+      {/* Simulated Map Iframe/Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000" 
+          className="w-full h-full object-cover opacity-20 grayscale brightness-125"
+          alt="Map Background"
+        />
+        <div className="absolute inset-0 bg-white/40" />
+      </div>
+
+      {/* Pins Layer */}
+      <div className="absolute inset-0 z-10 p-20">
+        {mapPins.map((pin) => (
+          <motion.div
+            key={pin.id}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            className="absolute -translate-x-1/2 -translate-y-full cursor-pointer group"
+            style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+            onClick={() => pin.tipo === 'Cámara' || pin.tipo === 'Camera' ? setSelectedCamera(pin) : null}
+          >
+            {/* Tooltip for non-camera sensors */}
+            {(pin.tipo !== 'Cámara' && pin.tipo !== 'Camera') && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-industrial-900 text-white text-[10px] font-bold rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-siac-active/30">
+                {pin.tipo}: {pin.estado}
+              </div>
+            )}
+
+            <div className="relative flex flex-col items-center">
+              {/* Pin Gota */}
+              <div className="relative w-10 h-12 drop-shadow-xl">
+                <svg viewBox="0 0 24 30" className="w-full h-full">
+                  <path 
+                    d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" 
+                    fill={statusColors[pin.estado as keyof typeof statusColors]}
+                  />
+                  <circle cx="12" cy="12" r="8" fill="white" />
+                </svg>
+                <div className="absolute top-[4px] left-1/2 -translate-x-1/2 text-industrial-900 mt-[4px]">
+                  {renderIcon(pin.tipo)}
+                </div>
+              </div>
+              {/* Label */}
+              <div className="mt-1 px-2 py-0.5 bg-white/80 backdrop-blur-sm rounded text-[8px] font-bold text-industrial-900 border border-black/5 whitespace-nowrap shadow-sm">
+                {pin.label}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Floating Legend (Top Left) */}
+      <div className="absolute top-6 left-6 z-30 bg-white p-4 rounded-xl border-2 border-siac-armed shadow-xl min-w-[140px]">
+        <div className="space-y-3">
+          {Object.entries(statusColors).map(([status, color]) => (
+            <div key={status} className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
+              <span className="text-xs font-bold text-gray-600">{status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Map Controls (Bottom Right) */}
+      <div className="absolute bottom-6 right-6 z-30 flex flex-col gap-2">
+        <div className="bg-white p-1 rounded-lg shadow-lg flex flex-col border border-black/5">
+          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-t-md">
+            <Maximize className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="bg-white p-1 rounded-lg shadow-lg flex flex-col border border-black/5">
+          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-t-md border-b border-gray-100">
+            <Plus className="w-5 h-5" />
+          </button>
+          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-b-md">
+            <Minus className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="bg-white p-1 rounded-lg shadow-lg flex flex-col border border-black/5">
+          <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors rounded-md">
+            <User className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Camera Modal (Bottom Left) */}
+      <AnimatePresence>
+        {selectedCamera && (
+          <motion.div
+            initial={{ opacity: 0, x: -50, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -50, scale: 0.9 }}
+            className="absolute bottom-6 left-6 z-50 w-[380px] bg-[#1F2937] border-2 border-siac-active rounded-xl shadow-2xl overflow-hidden"
+          >
+            <div className="relative">
+              {/* Close Button */}
+              <button 
+                onClick={() => setSelectedCamera(null)}
+                className="absolute top-2 right-2 z-10 p-1 bg-siac-blocked text-white rounded hover:brightness-110 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              {/* CCTV Feed */}
+              <div className="aspect-video bg-black relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&q=80&w=800" 
+                  className="w-full h-full object-cover opacity-60 grayscale sepia-[.2]"
+                  alt="Night Vision Feed"
+                />
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/scan-lines.png')] opacity-20 pointer-events-none" />
+                
+                {/* HUD Overlay */}
+                <div className="absolute top-3 left-3 flex flex-col">
+                  <span className="text-[10px] font-mono text-siac-active font-bold">PTZ Monitoring</span>
+                  <span className="text-[8px] font-mono text-gray-400">2024-04-20 01:42:13</span>
+                </div>
+
+                {/* Carousel Controls */}
+                <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
+                  <button className="p-1.5 bg-black/40 text-white rounded-full hover:bg-black/60 transition-all">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button className="p-1.5 bg-black/40 text-white rounded-full hover:bg-black/60 transition-all">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Carousel Dots */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className={cn("w-1.5 h-1.5 rounded-full", i === 1 ? "bg-white" : "bg-white/30")} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Info Bar */}
+              <div className="p-3 bg-industrial-950 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Cámara: {selectedCamera.id}</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
+                  <span className="text-[10px] font-bold text-siac-active">LIVE FEED</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Alarms List (Bottom Center) */}
+      <div className={cn(
+        "absolute bottom-0 left-1/2 -translate-x-1/2 z-40 w-[85%] max-w-[900px] transition-all duration-500 transform",
+        isAlarmsCollapsed ? "translate-y-[calc(100%-48px)]" : "translate-y-[-24px]"
+      )}>
+        <div className="bg-industrial-900 border-2 border-siac-armed rounded-2xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="p-3 bg-industrial-950/50 border-b border-white/5 flex items-center justify-between">
+            <div className="flex-1" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-white">Listado de alarmas</h3>
+            <div className="flex-1 flex justify-end">
+              <button 
+                onClick={() => setIsAlarmsCollapsed(!isAlarmsCollapsed)}
+                className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
+              >
+                <ChevronDown className={cn("w-5 h-5 text-siac-armed transition-transform duration-300", isAlarmsCollapsed ? "rotate-180" : "")} />
+              </button>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="p-4">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
+                  <th className="pb-3 px-2">Fecha</th>
+                  <th className="pb-3 px-2">Estado</th>
+                  <th className="pb-3 px-2">Dispositivo</th>
+                  <th className="pb-3 px-2">Ubicación</th>
+                  <th className="pb-3 px-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs font-medium">
+                {alarms.map((alarm, idx) => (
+                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-2 font-mono text-gray-400">{alarm.fecha}</td>
+                    <td className="py-3 px-2">
+                      <span className={cn(
+                        "px-3 py-1 rounded-full border text-[10px] font-bold",
+                        alarm.estado === 'Pendiente' ? "border-siac-disarmed/30 text-siac-disarmed bg-siac-disarmed/5" : "border-siac-active/30 text-siac-active bg-siac-active/5"
+                      )}>
+                        {alarm.estado}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 font-bold text-gray-300">{alarm.dispositivo}</td>
+                    <td className="py-3 px-2 text-gray-400">{alarm.ubicacion}</td>
+                    <td className="py-3 px-2 text-right">
+                      <button className="text-gray-500 hover:text-white transition-colors">
+                        <Search className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs font-bold">
+              <button className="text-gray-600 hover:text-white transition-colors">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-3">
+                <span className="text-siac-active">1</span>
+                <span className="text-gray-600 hover:text-white cursor-pointer">2</span>
+                <span className="text-gray-600 hover:text-white cursor-pointer">3</span>
+                <span className="text-gray-600 hover:text-white cursor-pointer">4</span>
+              </div>
+              <button className="text-gray-600 hover:text-white transition-colors">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa'>('dashboard');
   const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
@@ -702,7 +992,7 @@ const Dashboard = () => {
         
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <button 
-            onClick={() => setCurrentView('dashboard')}
+            onClick={() => { setCurrentView('dashboard'); setIsSidebarOpen(false); }}
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all",
               currentView === 'dashboard' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
@@ -710,7 +1000,13 @@ const Dashboard = () => {
           >
             <LayoutDashboard className="w-5 h-5" /> Dashboard
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
+          <button 
+            onClick={() => { setCurrentView('mapa'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
+              currentView === 'mapa' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
             <MapIcon className="w-5 h-5" /> Mapa
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all relative">
@@ -770,6 +1066,23 @@ const Dashboard = () => {
               </div>
               <ChevronRight className="w-3 h-3 text-gray-700" />
               <div 
+                onClick={() => setCurrentView('mapa')}
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer group"
+              >
+                <MapIcon className={cn(
+                  "w-3 h-3 transition-colors",
+                  currentView === 'mapa' ? "text-siac-green" : "text-gray-500 group-hover:text-siac-green"
+                )} />
+                <span className={cn(
+                  "transition-colors",
+                  currentView === 'mapa' ? "text-siac-green" : "text-white hover:text-siac-green"
+                )}
+                >
+                  Mapa
+                </span>
+              </div>
+              <ChevronRight className="w-3 h-3 text-gray-700" />
+              <div 
                 onClick={() => setCurrentView('reportes')}
                 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer group"
               >
@@ -801,6 +1114,16 @@ const Dashboard = () => {
             </button>
             <button className="text-gray-500 hover:text-white transition-all">
               <Bell className="w-4 h-4" />
+            </button>
+            <div className="w-px h-4 bg-white/10" />
+            <button 
+              onClick={() => setCurrentView('mapa')}
+              className={cn(
+                "transition-all",
+                currentView === 'mapa' ? "text-siac-green" : "text-gray-500 hover:text-white"
+              )}
+            >
+              <MapIcon className="w-4 h-4" />
             </button>
             <div className="w-px h-4 bg-white/10" />
             <button 
@@ -856,7 +1179,7 @@ const Dashboard = () => {
         </header>
 
         {/* Dashboard Body */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8 flex flex-col">
           {currentView === 'dashboard' ? (
             <div className="space-y-6 md:space-y-8">
               {/* KPI Grid */}
@@ -1227,6 +1550,8 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+          ) : currentView === 'mapa' ? (
+            <InteractiveMapView />
           ) : (
             <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
           )}
