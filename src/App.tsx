@@ -42,7 +42,9 @@ import {
   Info,
   Grid,
   Signal,
-  Database
+  Database,
+  Locate,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -563,7 +565,6 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   </div>
                 </div>
 
-                {/* Static Map Placeholder */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Mapa Estático</h4>
@@ -631,6 +632,378 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
           </>
         )}
       </AnimatePresence>
+    </div>
+  );
+};
+
+const TrackingView = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+
+  const assets = useMemo(() => ([
+    { id: 'CAM-01', tipo: 'Camera', estado: 'Online', ip: '192.168.1.101' },
+    { id: 'INF-02', tipo: 'Thermometer', estado: 'Online', ip: '192.168.1.105' },
+    { id: 'PIR-05', tipo: 'Radio', estado: 'Alert', ip: '192.168.1.112' },
+    { id: 'GW-ALPHA', tipo: 'Cpu', estado: 'Online', ip: '10.0.0.45' },
+    { id: 'ACT-99', tipo: 'Activity', estado: 'Offline', ip: '10.0.0.89' },
+    { id: 'MACH-TR_07', tipo: 'Tractor', estado: 'Online', ip: '10.0.0.77' },
+    { id: 'USR-MOB_12', tipo: 'Smartphone', estado: 'Online', ip: '10.0.0.12' },
+    { id: 'PPE-STAFF_03', tipo: 'Shirt', estado: 'Alert', ip: '10.0.0.33' },
+    { id: 'SOL-GRID_01', tipo: 'Grid', estado: 'Online', ip: '10.0.0.201' },
+    { id: 'TWR-SIG_04', tipo: 'Signal', estado: 'Online', ip: '10.0.0.154' },
+    { id: 'DB-EDGE_01', tipo: 'Database', estado: 'Alert', ip: '10.0.0.250' },
+  ]), []);
+
+  const filteredAssets = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return assets;
+    return assets.filter(a => `${a.id} ${a.tipo} ${a.estado} ${a.ip}`.toLowerCase().includes(q));
+  }, [assets, searchTerm]);
+
+  const uptimeData = useMemo(() => (
+    Array.from({ length: 24 }).map((_, i) => {
+      const base = 92 + Math.sin(i / 3) * 4;
+      const noise = (i % 5 === 0 ? -6 : 0) + (i % 7 === 0 ? -3 : 0);
+      return { h: `${String(i).padStart(2, '0')}:00`, v: Math.max(70, Math.min(100, base + noise)) };
+    })
+  ), []);
+
+  const timeline = useMemo(() => {
+    if (!selectedAsset) return [];
+    const base = [
+      { id: 'EVT-001', time: '07:10:12', kind: 'system', title: 'Check-in', meta: { source: 'heartbeat', rssi: '-61dBm', fw: 'v2.4.0' } },
+      { id: 'EVT-002', time: '08:02:45', kind: 'operational', title: 'Armado', meta: { user: 'admin', policy: 'SIAC_PERIMETRO' } },
+      { id: 'EVT-003', time: '09:11:03', kind: 'system', title: 'Cambio de IP', meta: { oldIp: '192.168.1.90', newIp: selectedAsset.ip } },
+      { id: 'EVT-004', time: '10:22:16', kind: 'alert', level: 'warning', title: 'Detección de Movimiento', meta: { zone: 'ZONA_NORTE_01', confidence: '0.87' } },
+      { id: 'EVT-005', time: '10:22:31', kind: 'alert', level: 'critical', title: 'Bloqueo', meta: { reason: 'policy_violation', action: 'blocked' } },
+      { id: 'EVT-006', time: '10:48:10', kind: 'operational', title: 'Desarmado', meta: { user: 'soporte', method: 'console' } },
+      { id: 'EVT-007', time: '12:05:00', kind: 'system', title: 'Sync de Configuración', meta: { profile: 'DEFAULT', checksum: 'A19F' } },
+      { id: 'EVT-008', time: '13:20:22', kind: 'operational', title: 'Armado', meta: { user: 'admin', policy: 'SIAC_MASTER_01' } },
+      { id: 'EVT-009', time: '14:02:07', kind: 'alert', level: 'warning', title: 'Actividad Anómala', meta: { metric: 'uptime_drop', delta: '-12%' } },
+      { id: 'EVT-010', time: '14:06:41', kind: 'system', title: 'Check-in', meta: { source: 'heartbeat', rssi: '-65dBm', fw: 'v2.4.0' } },
+    ];
+    return base;
+  }, [selectedAsset]);
+
+  const eventById = useMemo(() => {
+    const map = new Map<string, any>();
+    timeline.forEach((e: any) => map.set(e.id, e));
+    return map;
+  }, [timeline]);
+
+  const renderAssetIcon = (tipo: string) => {
+    switch (tipo) {
+      case 'Camera': return <Camera className="w-4 h-4" />;
+      case 'Thermometer': return <Thermometer className="w-4 h-4" />;
+      case 'Radio': return <Radio className="w-4 h-4" />;
+      case 'Cpu': return <Cpu className="w-4 h-4" />;
+      case 'Activity': return <Activity className="w-4 h-4" />;
+      case 'Tractor': return <Tractor className="w-4 h-4" />;
+      case 'Smartphone': return <Smartphone className="w-4 h-4" />;
+      case 'Shirt': return <Shirt className="w-4 h-4" />;
+      case 'Grid': return <Grid className="w-4 h-4" />;
+      case 'Signal': return <Signal className="w-4 h-4" />;
+      case 'Database': return <Database className="w-4 h-4" />;
+      default: return <Activity className="w-4 h-4" />;
+    }
+  };
+
+  const statusBadge = (estado: string) => {
+    if (estado === 'Alert') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+          style={{ color: '#F51E1E', borderColor: '#F51E1E40', backgroundColor: '#F51E1E10' }}
+        >
+          Alert
+        </span>
+      );
+    }
+    if (estado === 'Offline') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10 bg-white/[0.03] text-gray-300">
+          Offline
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+        style={{ color: '#0B986A', borderColor: '#0B986A40', backgroundColor: '#0B986A10' }}
+      >
+        Online
+      </span>
+    );
+  };
+
+  const eventColor = (evt: any) => {
+    if (evt?.kind === 'operational') return '#0B986A';
+    if (evt?.kind === 'alert') return evt?.level === 'warning' ? '#D89A1E' : '#F51E1E';
+    return '#9CA3AF';
+  };
+
+  return (
+    <div className="flex-1 flex overflow-hidden bg-industrial-950">
+      <div className="w-[32%] min-w-[360px] max-w-[460px] border-r border-industrial-800 bg-industrial-900 flex flex-col">
+        <div className="p-6 border-b border-industrial-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-industrial-950/50 border border-white/5">
+              <Locate className="w-5 h-5 text-siac-active" />
+            </div>
+            <div className="flex flex-col">
+              <div className="text-sm font-bold uppercase tracking-widest text-white">Seguimiento</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Asset selector • Tracking</div>
+            </div>
+          </div>
+
+          <div className="mt-5 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar activo (ID, IP, tipo...)"
+              className="w-full bg-industrial-950/40 border border-industrial-800 rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-active transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {filteredAssets.map((a: any) => {
+            const active = selectedAsset?.id === a.id;
+            return (
+              <button
+                key={a.id}
+                onClick={() => { setSelectedAsset(a); setSelectedEventId(null); }}
+                className={cn(
+                  "w-full text-left px-6 py-4 border-b border-industrial-800/60 transition-colors",
+                  "hover:bg-[#1F2937]/50",
+                  active ? "bg-[#1F2937]/50" : "bg-transparent"
+                )}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-9 h-9 rounded-xl flex items-center justify-center border",
+                      active ? "border-siac-active/30 bg-industrial-950/50" : "border-white/5 bg-industrial-950/30"
+                    )}>
+                      <div className={cn(active ? "text-siac-active" : "text-gray-400")}>
+                        {renderAssetIcon(a.tipo)}
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-white uppercase tracking-widest truncate">{a.id}</div>
+                      <div className="text-[10px] font-mono text-gray-500 truncate">IP: {a.ip}</div>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    {statusBadge(a.estado)}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-8">
+        {!selectedAsset ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="max-w-xl w-full bg-industrial-900 border border-industrial-800 rounded-2xl p-10 text-center">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-industrial-950/50 border border-white/5 flex items-center justify-center">
+                <Locate className="w-7 h-7 text-siac-active" />
+              </div>
+              <div className="mt-6 space-y-2">
+                <div className="text-sm font-bold uppercase tracking-widest text-white">Seleccione un activo</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-widest">
+                  Elija un dispositivo para auditar su comportamiento histórico
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-industrial-800 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-industrial-950/40 flex items-center justify-center text-siac-active">
+                    {renderAssetIcon(selectedAsset.tipo)}
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="text-xl font-black tracking-tight text-white">{selectedAsset.id}</div>
+                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+                      {selectedAsset.ip} • {selectedAsset.tipo}
+                    </div>
+                  </div>
+                </div>
+                <div className="shrink-0">{statusBadge(selectedAsset.estado)}</div>
+              </div>
+
+              <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { label: 'Última Actividad', value: '2m', icon: History },
+                  { label: 'Tiempo Online (MTBF)', value: '18d 04h', icon: Activity },
+                  { label: 'Eventos Críticos (7d)', value: '7', icon: AlertTriangle },
+                ].map((kpi, i) => {
+                  const Icon = kpi.icon;
+                  return (
+                    <div key={i} className="bg-industrial-950/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{kpi.label}</div>
+                        <div className="text-lg font-black text-white">{kpi.value}</div>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl bg-industrial-950/50 border border-white/5 flex items-center justify-center text-gray-400">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2 bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
+                <div className="bg-[#1F2937] px-6 py-4 border-b border-industrial-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-white">Timeline de Eventos</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-gray-500 uppercase">{timeline.length} eventos</span>
+                </div>
+
+                <div className="p-6">
+                  <div className="relative">
+                    <div className="absolute left-[14px] top-0 bottom-0 w-px bg-industrial-800" />
+                    <div className="space-y-6">
+                      {timeline.map((evt: any) => {
+                        const active = selectedEventId === evt.id;
+                        const color = eventColor(evt);
+                        return (
+                          <div key={evt.id} className="relative">
+                            <button
+                              onClick={() => setSelectedEventId((v) => (v === evt.id ? null : evt.id))}
+                              className="w-full text-left flex gap-4 items-start group"
+                            >
+                              <div className="relative z-10 mt-1">
+                                <div
+                                  className="w-7 h-7 rounded-full border flex items-center justify-center bg-industrial-950"
+                                  style={{ borderColor: `${color}40` }}
+                                >
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                                </div>
+                              </div>
+
+                              <div className={cn(
+                                "flex-1 rounded-xl border border-white/5 px-4 py-3 transition-colors",
+                                "hover:bg-[#1F2937]/50"
+                              )}>
+                                <div className="flex items-center justify-between gap-4">
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-widest text-white truncate">{evt.title}</div>
+                                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest truncate">{evt.id}</div>
+                                  </div>
+                                  <div className="shrink-0 text-[10px] font-mono text-gray-400">{evt.time}</div>
+                                </div>
+                              </div>
+                            </button>
+
+                            <AnimatePresence>
+                              {active && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 6 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: 6 }}
+                                  className="ml-[44px] mt-3 bg-[#1F2937] border border-industrial-800 rounded-2xl p-4 shadow-2xl"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Metadatos técnicos</div>
+                                    <div className="text-[10px] font-mono text-gray-500 uppercase">{selectedAsset.id}</div>
+                                  </div>
+                                  <div className="mt-4 grid grid-cols-2 gap-3">
+                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Evento</div>
+                                      <div className="text-[11px] font-mono text-white">{evt.id}</div>
+                                    </div>
+                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Timestamp</div>
+                                      <div className="text-[11px] font-mono text-white">{evt.time}</div>
+                                    </div>
+                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">IP</div>
+                                      <div className="text-[11px] font-mono text-white">{selectedAsset.ip}</div>
+                                    </div>
+                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3 flex items-center justify-between">
+                                      <div>
+                                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Operador</div>
+                                        <div className="text-[11px] font-mono text-white">{evt.meta?.user ?? 'system'}</div>
+                                      </div>
+                                      <div className="w-9 h-9 rounded-xl bg-industrial-950/40 border border-white/5 flex items-center justify-center text-gray-400">
+                                        <User className="w-4 h-4" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="mt-4 bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Payload</div>
+                                    <div className="mt-1 text-[11px] font-mono text-gray-200 break-words">
+                                      {JSON.stringify(evt.meta)}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
+                <div className="bg-[#1F2937] px-6 py-4 border-b border-industrial-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0B986A' }} />
+                    <span className="text-xs font-bold uppercase tracking-widest text-white">Salud (24h)</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-gray-500 uppercase">Uptime / señal</span>
+                </div>
+
+                <div className="p-6">
+                  <div className="h-56 w-full bg-industrial-950/30 rounded-2xl border border-industrial-800 p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={uptimeData}>
+                        <defs>
+                          <linearGradient id="trkUptime" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#0B986A" stopOpacity={0.35} />
+                            <stop offset="95%" stopColor="#0B986A" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                        <XAxis dataKey="h" hide />
+                        <YAxis hide domain={[60, 100]} />
+                        <RechartsTooltip
+                          contentStyle={{ backgroundColor: '#161D31', border: 'none', borderRadius: '8px', fontSize: '10px' }}
+                          itemStyle={{ color: '#0B986A' }}
+                        />
+                        <Area type="monotone" dataKey="v" stroke="#0B986A" fill="url(#trkUptime)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Promedio</div>
+                      <div className="text-lg font-black text-white">94.1%</div>
+                    </div>
+                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Mínimo</div>
+                      <div className="text-lg font-black" style={{ color: '#F51E1E' }}>78.0%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -1509,7 +1882,7 @@ const InteractiveMapView = () => {
 
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento'>('dashboard');
   const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
@@ -1625,7 +1998,13 @@ const Dashboard = () => {
           >
             <FileText className="w-5 h-5" /> Reportes
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
+          <button 
+            onClick={() => { setCurrentView('seguimiento'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
+              currentView === 'seguimiento' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
             <Activity className="w-5 h-5" /> Seguimiento
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
@@ -1710,6 +2089,15 @@ const Dashboard = () => {
                   </div>
                 </>
               )}
+              {currentView === 'seguimiento' && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                    <History className="w-3 h-3" />
+                    <span>Seguimiento</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -1753,7 +2141,13 @@ const Dashboard = () => {
             >
               <FileText className="w-4 h-4" />
             </button>
-            <button className="text-gray-500 hover:text-white transition-all">
+            <button 
+              onClick={() => setCurrentView('seguimiento')}
+              className={cn(
+                "transition-all",
+                currentView === 'seguimiento' ? "text-siac-green" : "text-gray-500 hover:text-white"
+              )}
+            >
               <Clock className="w-4 h-4" />
             </button>
             <button className="text-gray-500 hover:text-white transition-all">
@@ -2178,6 +2572,8 @@ const Dashboard = () => {
             <InteractiveMapView />
           ) : currentView === 'alarmas' ? (
             <AlarmsView onNavigateToMap={() => setCurrentView('mapa')} />
+          ) : currentView === 'seguimiento' ? (
+            <TrackingView />
           ) : (
             <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
           )}
