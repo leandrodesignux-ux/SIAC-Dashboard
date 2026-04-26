@@ -44,7 +44,11 @@ import {
   Signal,
   Database,
   Locate,
-  History
+  History,
+  UserPlus,
+  UserCog,
+  Unlock,
+  Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -1008,6 +1012,362 @@ const TrackingView = () => {
   );
 };
 
+const UsersView = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([
+    { id: 'USR-001', name: 'Leandro Gómez', title: 'Administrador', department: 'SOC', email: 'admin@siac.mx', role: 'Admin', active: true, lastAccess: '2026-04-26 14:12', assetsAssigned: 18, zones: ['ZONA_NORTE_01', 'PERIMETRO_B', 'SALA_SERVIDORES'], cameras: ['CAM-01', 'CAM-08'] },
+    { id: 'USR-002', name: 'María Ortega', title: 'Operador de Monitoreo', department: 'NOC', email: 'm.ortega@siac.mx', role: 'Operador', active: true, lastAccess: '2026-04-26 13:48', assetsAssigned: 7, zones: ['ZONA_NORTE_01', 'ALMACEN_CENTRAL'], cameras: ['CAM-01'] },
+    { id: 'USR-003', name: 'Carlos Rivera', title: 'Auditor Técnico', department: 'Compliance', email: 'c.rivera@siac.mx', role: 'Auditor', active: true, lastAccess: '2026-04-25 18:03', assetsAssigned: 4, zones: ['EDGE_DC'], cameras: [] },
+    { id: 'USR-004', name: 'Sofía Luna', title: 'Operador de Monitoreo', department: 'SOC', email: 's.luna@siac.mx', role: 'Operador', active: false, lastAccess: '2026-04-12 09:22', assetsAssigned: 0, zones: [], cameras: [] },
+    { id: 'USR-005', name: 'Iván Duarte', title: 'Administrador', department: 'Infra', email: 'i.duarte@siac.mx', role: 'Admin', active: true, lastAccess: '2026-04-26 12:01', assetsAssigned: 12, zones: ['TORRE_COMMS', 'PLANTA_SOLAR'], cameras: ['CAM-08'] },
+    { id: 'USR-006', name: 'Ana Torres', title: 'Auditor Técnico', department: 'Compliance', email: 'a.torres@siac.mx', role: 'Auditor', active: false, lastAccess: '2026-03-22 16:40', assetsAssigned: 0, zones: [], cameras: [] },
+  ]);
+  const [draftZones, setDraftZones] = useState<string[]>([]);
+  const [draftCameras, setDraftCameras] = useState<string[]>([]);
+
+  const zones = useMemo(() => ([
+    'ZONA_NORTE_01',
+    'PERIMETRO_B',
+    'ALMACEN_CENTRAL',
+    'SALA_SERVIDORES',
+    'VALVULA_PRINCIPAL',
+    'OBRA_SECTOR_02',
+    'ACCESO_SUR',
+    'ZONA_RESTRINGIDA_A',
+    'PLANTA_SOLAR',
+    'TORRE_COMMS',
+    'EDGE_DC',
+  ]), []);
+
+  const cameras = useMemo(() => ([
+    'CAM-01',
+    'CAM-08',
+    'CAM-12',
+    'CAM-14',
+  ]), []);
+
+  useEffect(() => {
+    if (!selectedUser) return;
+    setDraftZones(Array.isArray(selectedUser.zones) ? selectedUser.zones : []);
+    setDraftCameras(Array.isArray(selectedUser.cameras) ? selectedUser.cameras : []);
+  }, [selectedUser]);
+
+  const activeCount = useMemo(() => users.filter(u => u.active).length, [users]);
+
+  const filteredUsers = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const haystack = `${u.id} ${u.name} ${u.title} ${u.department} ${u.email} ${u.role}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [searchTerm, users]);
+
+  const roleStyle = (role: string) => {
+    if (role === 'Admin') return { color: '#60A5FA', borderColor: '#60A5FA40', backgroundColor: '#60A5FA10' };
+    if (role === 'Auditor') return { color: '#D89A1E', borderColor: '#D89A1E40', backgroundColor: '#D89A1E10' };
+    return { color: '#0B986A', borderColor: '#0B986A40', backgroundColor: '#0B986A10' };
+  };
+
+  const statusDot = (active: boolean) => (
+    <span
+      className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#1F2937]"
+      style={{ backgroundColor: active ? '#0B986A' : '#F51E1E' }}
+    />
+  );
+
+  const toggleListValue = (list: string[], value: string) => (
+    list.includes(value) ? list.filter(v => v !== value) : [...list, value]
+  );
+
+  const updateUser = (id: string, patch: any) => {
+    setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...patch } : u)));
+  };
+
+  const handleAddOperator = () => {
+    const id = `USR-${String(users.length + 1).padStart(3, '0')}`;
+    const newUser = { id, name: 'Nuevo Operador', title: 'Operador de Monitoreo', department: 'SOC', email: `operador.${users.length + 1}@siac.mx`, role: 'Operador', active: true, lastAccess: 'N/A', assetsAssigned: 0, zones: [], cameras: [] };
+    setUsers(prev => [newUser, ...prev]);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col p-8 gap-8 overflow-y-auto bg-industrial-950 relative">
+      <div className="flex items-start justify-between gap-6">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-industrial-900 border border-industrial-800 rounded-lg">
+            <ShieldCheck className="w-6 h-6 text-siac-active" />
+          </div>
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-white tracking-tight">Gestión de Usuarios (IAM)</div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500 uppercase font-mono tracking-widest">IAM • Identity & Access</span>
+              <span className="text-[10px] font-mono uppercase text-gray-500">Usuarios Activos: <span className="text-white">{activeCount}</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar usuario, rol o departamento..."
+              className="bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-active w-72 transition-all"
+            />
+          </div>
+          <button
+            onClick={handleAddOperator}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-siac-active hover:brightness-110 text-industrial-950 transition-all"
+          >
+            <UserPlus className="w-4 h-4" />
+            Añadir Operador
+          </button>
+        </div>
+      </div>
+
+      {filteredUsers.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-industrial-900 border border-industrial-800 rounded-2xl p-10 text-center max-w-xl w-full">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-industrial-950/50 border border-white/5 flex items-center justify-center">
+              <Users className="w-7 h-7 text-gray-400" />
+            </div>
+            <div className="mt-6 space-y-2">
+              <div className="text-sm font-bold uppercase tracking-widest text-white">Sin resultados</div>
+              <div className="text-xs font-mono text-gray-500 uppercase tracking-widest">Ajuste el buscador para localizar operadores</div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredUsers.map((u: any) => {
+            const role = roleStyle(u.role);
+            return (
+              <motion.button
+                key={u.id}
+                whileHover={{ y: -4 }}
+                onClick={() => setSelectedUser(u)}
+                className="text-left bg-[#1F2937]/50 border border-white/5 rounded-2xl px-5 pt-5 pb-16 relative overflow-hidden group transition-colors hover:border-white/10"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-industrial-950/40 border border-white/5 flex items-center justify-center text-white font-bold">
+                        {String(u.name).split(' ').slice(0, 2).map((p: string) => p[0]).join('')}
+                      </div>
+                      {statusDot(!!u.active)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-white truncate">{u.name}</div>
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">{u.title}</div>
+                      <div className="text-[11px] font-mono text-gray-300 truncate">{u.email}</div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <span
+                          className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                          style={{ color: role.color, borderColor: role.borderColor, backgroundColor: role.backgroundColor }}
+                        >
+                          {u.role}
+                        </span>
+                        <span className="text-[10px] font-mono uppercase text-gray-500">{u.department}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-gray-500">ID</div>
+                    <div className="text-[11px] font-mono text-gray-200">{u.id}</div>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Último Acceso</div>
+                    <div className="text-[11px] font-mono text-white">{u.lastAccess}</div>
+                  </div>
+                  <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Activos Asignados</div>
+                    <div className="text-[11px] font-mono text-white">{u.assetsAssigned}</div>
+                  </div>
+                </div>
+
+                <div className="absolute inset-x-5 bottom-5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedUser(u); }}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-industrial-950/40 border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                      <UserCog className="w-4 h-4 text-gray-300" />
+                      Editar Permisos
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); updateUser(u.id, { active: !u.active }); }}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-industrial-950/40 border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                      <Unlock className="w-4 h-4" style={{ color: u.active ? '#F51E1E' : '#0B986A' }} />
+                      {u.active ? 'Suspender' : 'Reactivar'}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedUser(u); }}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-industrial-950/40 border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                      <Key className="w-4 h-4 text-gray-300" />
+                      Log de Actividad
+                    </button>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      )}
+
+      <AnimatePresence>
+        {selectedUser && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedUser(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 right-0 h-full w-[480px] bg-[#1F2937] border-l border-siac-active/30 z-[70] shadow-2xl flex flex-col"
+            >
+              <div className="px-6 py-5 border-b border-industrial-800 bg-[#1F2937] flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4 min-w-0">
+                  <div className="relative shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-industrial-950/40 border border-white/5 flex items-center justify-center text-white font-bold">
+                      {String(selectedUser.name).split(' ').slice(0, 2).map((p: string) => p[0]).join('')}
+                    </div>
+                    {statusDot(!!selectedUser.active)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-lg font-bold text-white truncate">{selectedUser.name}</div>
+                    <div className="text-[11px] font-mono text-gray-300 truncate">{selectedUser.email}</div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span
+                        className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                        style={roleStyle(selectedUser.role)}
+                      >
+                        {selectedUser.role}
+                      </span>
+                      <span className="text-[10px] font-mono uppercase text-gray-500">{selectedUser.department}</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Accesos</div>
+                    <div className="text-[10px] font-mono uppercase text-gray-500">{selectedUser.id}</div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Último Acceso</div>
+                      <div className="text-[11px] font-mono text-white">{selectedUser.lastAccess}</div>
+                    </div>
+                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Activos Asignados</div>
+                      <div className="text-[11px] font-mono text-white">{selectedUser.assetsAssigned}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
+                  <div className="bg-[#1F2937] px-5 py-4 border-b border-industrial-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="w-4 h-4 text-gray-300" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-white">Permisos por Zona</span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase text-gray-500">{draftZones.length}/{zones.length}</span>
+                  </div>
+                  <div className="p-5 grid grid-cols-1 gap-2">
+                    {zones.map((z) => (
+                      <label key={z} className="flex items-center justify-between gap-3 bg-industrial-950/30 border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={draftZones.includes(z)}
+                            onChange={() => setDraftZones(prev => toggleListValue(prev, z))}
+                            className="accent-[#0B986A]"
+                          />
+                          <span className="text-[11px] font-mono text-gray-200 uppercase tracking-wider">{z}</span>
+                        </div>
+                        <Locate className="w-4 h-4 text-gray-500" />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
+                  <div className="bg-[#1F2937] px-5 py-4 border-b border-industrial-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-gray-300" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-white">Permisos de Cámaras</span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase text-gray-500">{draftCameras.length}/{cameras.length}</span>
+                  </div>
+                  <div className="p-5 grid grid-cols-1 gap-2">
+                    {cameras.map((c) => (
+                      <label key={c} className="flex items-center justify-between gap-3 bg-industrial-950/30 border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={draftCameras.includes(c)}
+                            onChange={() => setDraftCameras(prev => toggleListValue(prev, c))}
+                            className="accent-[#0B986A]"
+                          />
+                          <span className="text-[11px] font-mono text-gray-200 uppercase tracking-wider">{c}</span>
+                        </div>
+                        <Camera className="w-4 h-4 text-gray-500" />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-industrial-800 bg-industrial-950/50 grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => {
+                    updateUser(selectedUser.id, { active: !selectedUser.active });
+                    setSelectedUser(null);
+                  }}
+                  className="flex items-center justify-center gap-2 py-3 bg-industrial-800 hover:bg-industrial-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+                >
+                  <Unlock className="w-4 h-4" style={{ color: selectedUser.active ? '#F51E1E' : '#0B986A' }} />
+                  {selectedUser.active ? 'Suspender' : 'Reactivar'}
+                </button>
+                <button
+                  onClick={() => {
+                    updateUser(selectedUser.id, { zones: draftZones, cameras: draftCameras });
+                    setSelectedUser(null);
+                  }}
+                  className="flex items-center justify-center gap-2 py-3 bg-siac-active hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Guardar Permisos
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // --- Components ---
 
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
@@ -1882,7 +2242,7 @@ const InteractiveMapView = () => {
 
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento' | 'Usuarios'>('dashboard');
   const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
@@ -2007,7 +2367,13 @@ const Dashboard = () => {
           >
             <Activity className="w-5 h-5" /> Seguimiento
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
+          <button 
+            onClick={() => { setCurrentView('Usuarios'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
+              currentView === 'Usuarios' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
             <Users className="w-5 h-5" /> Usuarios
           </button>
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-industrial-800 rounded-lg font-medium transition-all">
@@ -2095,6 +2461,15 @@ const Dashboard = () => {
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
                     <History className="w-3 h-3" />
                     <span>Seguimiento</span>
+                  </div>
+                </>
+              )}
+              {currentView === 'Usuarios' && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                    <Users className="w-3 h-3" />
+                    <span>Usuarios</span>
                   </div>
                 </>
               )}
@@ -2574,6 +2949,8 @@ const Dashboard = () => {
             <AlarmsView onNavigateToMap={() => setCurrentView('mapa')} />
           ) : currentView === 'seguimiento' ? (
             <TrackingView />
+          ) : currentView === 'Usuarios' ? (
+            <UsersView />
           ) : (
             <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
           )}
