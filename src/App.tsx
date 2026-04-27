@@ -3615,7 +3615,24 @@ const Dashboard = () => {
                           {filteredAlarms.map((alarm) => (
                             <tr 
                               key={alarm.id} 
-                              className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                              className={cn(
+                                "border-b border-white/5 hover:bg-white/5 transition-colors group",
+                                (alarm.estado === 'PENDIENTE' || alarm.estado === 'ALERTA') && "border-l-[3px]"
+                              )}
+                              style={{
+                                backgroundColor:
+                                  alarm.estado === 'PENDIENTE'
+                                    ? 'rgba(250,217,42,0.04)'
+                                    : alarm.estado === 'ALERTA'
+                                    ? 'rgba(245,30,30,0.04)'
+                                    : undefined,
+                                borderLeftColor:
+                                  alarm.estado === 'PENDIENTE'
+                                    ? '#FAD92A'
+                                    : alarm.estado === 'ALERTA'
+                                    ? '#F51E1E'
+                                    : undefined,
+                              }}
                             >
                               <td className="px-6 py-4 font-mono text-gray-400">#EV-{alarm.id}024</td>
                               <td className="px-6 py-4 text-gray-300">{alarm.fecha}</td>
