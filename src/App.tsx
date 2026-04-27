@@ -312,7 +312,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               <input 
                 type="text" 
                 placeholder="Buscar evento o activo..."
-                className="bg-industrial-900 border border-border-card rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent/50 w-64 transition-all"
+                className="bg-card border border-border-card rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent/50 w-64 transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -321,7 +321,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               <button
                 onClick={() => setIsFilterOpen(v => !v)}
                 className={cn(
-                  "flex items-center gap-2 bg-industrial-900 border px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                  "flex items-center gap-2 bg-card border px-4 py-2 rounded-lg text-xs font-bold transition-all",
                   isFilterOpen ? "border-siac-accent/40 text-white" : "border-border-card text-gray-400 hover:text-white"
                 )}
               >
@@ -343,7 +343,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       initial={{ opacity: 0, y: 8, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      className="absolute right-0 mt-2 w-[360px] bg-[#1F2937] border border-border-card rounded-2xl shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-2 w-[360px] bg-card border border-border-card rounded-2xl shadow-2xl z-50 overflow-hidden"
                     >
                       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                             {deviceTypeOptions.map((opt) => {
                               const checked = deviceTypeFilters.includes(opt.id);
                               return (
-                                <label key={opt.id} className="flex items-center gap-2 bg-industrial-950/30 border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
+                                <label key={opt.id} className="flex items-center gap-2 bg-card border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
                                   <input
                                     type="checkbox"
                                     checked={checked}
@@ -392,7 +392,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                             {severityOptions.map((opt) => {
                               const checked = severityFilters.includes(opt.id);
                               return (
-                                <label key={opt.id} className="flex items-center justify-between gap-3 bg-industrial-950/30 border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
+                                <label key={opt.id} className="flex items-center justify-between gap-3 bg-card border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
                                   <div className="flex items-center gap-2">
                                     <input
                                       type="checkbox"
@@ -428,7 +428,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-industrial-900 border border-border-card p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-accent/30 transition-all"
+              className="bg-card border border-border-card p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-accent/30 transition-all"
             >
               <div className="flex justify-between items-start z-10">
                 <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">{kpi.label}</span>
@@ -455,8 +455,8 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
       </div>
 
       {/* Alarms Table */}
-      <div className="flex-1 bg-industrial-900 border border-border-card rounded-2xl overflow-hidden flex flex-col">
-        <div className="bg-[#1F2937] px-6 py-4 flex items-center justify-between border-b border-border-card">
+      <div className="flex-1 bg-card border border-border-card rounded-2xl overflow-hidden flex flex-col">
+        <div className="bg-card px-6 py-4 flex items-center justify-between border-b border-border-card">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-widest text-white">Listado de Eventos en Tiempo Real</span>
@@ -485,7 +485,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   transition={{ delay: i * 0.05 }}
                   className={cn(
                     "group border-b border-border-card transition-colors",
-                    alarm.color === '#FAD92A' ? "bg-[rgba(250,217,42,0.04)]" : alarm.color === '#F51E1E' ? "bg-[rgba(245,30,30,0.04)]" : "hover:bg-[#1F2937]/50"
+                    alarm.color === '#FAD92A' ? "bg-[rgba(250,217,42,0.04)]" : alarm.color === '#F51E1E' ? "bg-[rgba(245,30,30,0.04)]" : "hover:bg-card/50"
                   )}
                   style={{
                     borderLeft: alarm.color === '#FAD92A' ? '3px solid #FAD92A' : alarm.color === '#F51E1E' ? '3px solid #F51E1E' : undefined,
@@ -495,7 +495,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.timestamp}</td>
                   <td className="px-6 py-4 text-xs font-bold text-white uppercase">{alarm.activo}</td>
                   <td className="px-6 py-4 text-center">
-                    <div className="inline-flex p-1.5 bg-industrial-800 rounded-lg text-gray-500 group-hover:text-siac-accent transition-colors">
+                    <div className="inline-flex p-1.5 bg-card rounded-lg text-gray-500 group-hover:text-siac-accent transition-colors">
                       {renderIcon(alarm.tipo)}
                     </div>
                   </td>
@@ -518,7 +518,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       </button>
                       <button 
                         onClick={() => setSelectedAlarm(alarm)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-industrial-800 hover:bg-industrial-700 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-card hover:bg-card/50 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
                       >
                         Detalle
                         <ArrowUpRight className="w-3 h-3" />
@@ -530,7 +530,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="p-4 bg-industrial-800 rounded-full">
+                      <div className="p-4 bg-card rounded-full">
                         <CheckCircle2 className="w-12 h-12 text-siac-accent opacity-20" />
                       </div>
                       <div className="space-y-1">
@@ -562,9 +562,9 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute top-0 right-0 h-full w-[450px] bg-[#1F2937] border-l border-siac-accent/30 z-[70] shadow-2xl flex flex-col"
+              className="absolute top-0 right-0 h-full w-[450px] bg-card border-l border-siac-accent/30 z-[70] shadow-2xl flex flex-col"
             >
-              <div className="px-6 py-5 border-b border-border-card bg-[#1F2937]">
+              <div className="px-6 py-5 border-b border-border-card bg-card">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div 
@@ -574,14 +574,8 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       {renderIcon(selectedAlarm.tipo)}
                     </div>
                     <div className="space-y-2">
-                      <div className="space-y-0.5">
-                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">ID Evento</div>
-                        <div className="text-sm font-bold font-mono text-white">{selectedAlarm.id}</div>
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Timestamp</div>
-                        <div className="text-[11px] font-mono text-gray-300">{selectedAlarm.timestamp}</div>
-                      </div>
+                      <div className="text-xs font-bold text-white uppercase tracking-widest truncate">{selectedAlarm.id}</div>
+                      <div className="text-[10px] font-mono text-gray-500 truncate">Timestamp: {selectedAlarm.timestamp}</div>
                     </div>
                   </div>
 
@@ -605,11 +599,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               <div className="flex-1 overflow-y-auto p-6 space-y-8">
                 {/* Asset Info */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-border-card">
+                  <div className="bg-card p-4 rounded-xl border border-border-card">
                     <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Dirección IP</p>
                     <p className="text-xs font-mono text-white">{selectedAlarm.ip}</p>
                   </div>
-                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-border-card">
+                  <div className="bg-card p-4 rounded-xl border border-border-card">
                     <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Ubicación Técnica</p>
                     <p className="text-xs font-mono text-white">{selectedAlarm.ubicacion}</p>
                   </div>
@@ -621,7 +615,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Actividad (Últimos 10 min)</h4>
                     <span className="text-[8px] font-mono text-gray-500 uppercase">Tiempo real • 100ms lag</span>
                   </div>
-                  <div className="h-48 w-full bg-industrial-950/30 rounded-2xl border border-border-card p-4">
+                  <div className="h-48 w-full bg-card rounded-2xl border border-border-card p-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={activityData}>
                         <defs>
@@ -648,7 +642,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Mapa Estático</h4>
                     <span className="text-[8px] font-mono text-gray-500 uppercase">Ubicación técnica</span>
                   </div>
-                  <div className="h-36 w-full rounded-2xl border border-border-card overflow-hidden bg-[#161D31] relative">
+                  <div className="h-36 w-full rounded-2xl border border-border-card overflow-hidden bg-card relative">
                     <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(77,196,147,0.12)_0%,_transparent_55%)]" />
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
@@ -698,7 +692,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-border-card bg-industrial-950/50 grid grid-cols-2 gap-4">
+              <div className="p-6 border-t border-border-card bg-card grid grid-cols-2 gap-4">
                 <button className="flex items-center justify-center gap-2 py-3 bg-industrial-800 hover:bg-industrial-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
                   Generar Reporte
                 </button>
@@ -821,10 +815,10 @@ const TrackingView = () => {
 
   return (
     <div className="flex-1 flex overflow-hidden bg-industrial-950">
-      <div className="w-[32%] min-w-[360px] max-w-[460px] border-r border-border-card bg-industrial-900 flex flex-col">
+      <div className="w-[32%] min-w-[360px] max-w-[460px] border-r border-border-card bg-card flex flex-col">
         <div className="p-6 border-b border-border-card">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-industrial-950/50 border border-white/5">
+            <div className="p-2 rounded-lg bg-card border border-white/5">
               <Locate className="w-5 h-5 text-siac-accent" />
             </div>
             <div className="flex flex-col">
@@ -839,7 +833,7 @@ const TrackingView = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar activo (ID, IP, tipo...)"
-              className="w-full bg-industrial-950/40 border border-border-card rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent/50 transition-all"
+              className="w-full bg-card border border-border-card rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent/50 transition-all"
             />
           </div>
         </div>
@@ -851,21 +845,15 @@ const TrackingView = () => {
               <button
                 key={a.id}
                 onClick={() => { setSelectedAsset(a); setSelectedEventId(null); }}
-                className={cn(
-                  "w-full text-left px-6 py-4 border-b border-border-card transition-colors",
-                  "hover:bg-[#1F2937]/50",
-                  active ? "bg-[#1F2937]/50" : "bg-transparent"
-                )}
+                className="w-full text-left bg-card border border-white/5 rounded-2xl px-6 py-4 relative overflow-hidden group transition-colors hover:border-white/10"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn(
-                      "w-9 h-9 rounded-xl flex items-center justify-center border",
-                      active ? "border-siac-accent/30 bg-industrial-950/50" : "border-white/5 bg-industrial-950/30"
-                    )}>
-                      <div className={cn(active ? "text-siac-accent" : "text-gray-400")}>
+                    <div className="relative shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-card border border-white/5 flex items-center justify-center text-white font-bold">
                         {renderAssetIcon(a.tipo)}
                       </div>
+                      {statusBadge(a.estado)}
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-white uppercase tracking-widest truncate">{a.id}</div>
@@ -885,8 +873,8 @@ const TrackingView = () => {
       <div className="flex-1 overflow-y-auto p-8">
         {!selectedAsset ? (
           <div className="h-full flex items-center justify-center">
-            <div className="max-w-xl w-full bg-industrial-900 border border-border-card rounded-2xl p-10 text-center">
-              <div className="mx-auto w-14 h-14 rounded-2xl bg-industrial-950/50 border border-white/5 flex items-center justify-center">
+            <div className="max-w-xl w-full bg-card border border-border-card rounded-2xl p-10 text-center">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-card border border-white/5 flex items-center justify-center">
                 <Locate className="w-7 h-7 text-siac-accent" />
               </div>
               <div className="mt-6 space-y-2">
@@ -899,10 +887,10 @@ const TrackingView = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="bg-industrial-900 border border-border-card rounded-2xl overflow-hidden">
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-border-card flex items-center justify-between">
+            <div className="bg-card border border-border-card rounded-2xl overflow-hidden">
+              <div className="bg-card px-6 py-5 border-b border-border-card flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-industrial-950/40 flex items-center justify-center text-siac-accent">
+                  <div className="w-12 h-12 rounded-xl bg-card border border-white/5 flex items-center justify-center text-siac-accent">
                     {renderAssetIcon(selectedAsset.tipo)}
                   </div>
                   <div className="flex flex-col">
@@ -923,12 +911,12 @@ const TrackingView = () => {
                 ].map((kpi, i) => {
                   const Icon = kpi.icon;
                   return (
-                    <div key={i} className="bg-industrial-950/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                    <div key={i} className="bg-card border border-white/5 rounded-xl p-4 flex items-center justify-between">
                       <div className="flex flex-col">
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{kpi.label}</div>
+                        <div className="text-xs font-bold uppercase tracking-widest text-white">{kpi.label}</div>
                         <div className="text-lg font-black text-white">{kpi.value}</div>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-industrial-950/50 border border-white/5 flex items-center justify-center text-gray-400">
+                      <div className="w-10 h-10 rounded-xl bg-card border border-white/5 flex items-center justify-center text-gray-400">
                         <Icon className="w-5 h-5" />
                       </div>
                     </div>
@@ -938,8 +926,8 @@ const TrackingView = () => {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 bg-industrial-900 border border-border-card rounded-2xl overflow-hidden">
-                <div className="bg-[#1F2937] px-6 py-4 border-b border-border-card flex items-center justify-between">
+              <div className="xl:col-span-2 bg-card border border-border-card rounded-2xl overflow-hidden">
+                <div className="bg-card px-6 py-4 border-b border-border-card flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
                     <span className="text-xs font-bold uppercase tracking-widest text-white">Timeline de Eventos</span>
@@ -962,7 +950,7 @@ const TrackingView = () => {
                             >
                               <div className="relative z-10 mt-1">
                                 <div
-                                  className="w-7 h-7 rounded-full border flex items-center justify-center bg-industrial-950"
+                                  className="w-7 h-7 rounded-full border flex items-center justify-center bg-card"
                                   style={{ borderColor: `${color}40` }}
                                 >
                                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
@@ -971,7 +959,7 @@ const TrackingView = () => {
 
                               <div className={cn(
                                 "flex-1 rounded-xl border border-white/5 px-4 py-3 transition-colors",
-                                "hover:bg-[#1F2937]/50"
+                                "hover:bg-card/50"
                               )}>
                                 <div className="flex items-center justify-between gap-4">
                                   <div className="min-w-0">
@@ -989,36 +977,36 @@ const TrackingView = () => {
                                   initial={{ opacity: 0, y: 6 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: 6 }}
-                                  className="ml-[44px] mt-3 bg-[#1F2937] border border-industrial-800 rounded-2xl p-4 shadow-2xl"
+                                  className="ml-[44px] mt-3 bg-card border border-industrial-800 rounded-2xl p-4 shadow-2xl"
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Metadatos técnicos</div>
                                     <div className="text-[10px] font-mono text-gray-500 uppercase">{selectedAsset.id}</div>
                                   </div>
                                   <div className="mt-4 grid grid-cols-2 gap-3">
-                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                    <div className="bg-card border border-white/5 rounded-xl p-3">
                                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Evento</div>
                                       <div className="text-[11px] font-mono text-white">{evt.id}</div>
                                     </div>
-                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                    <div className="bg-card border border-white/5 rounded-xl p-3">
                                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Timestamp</div>
                                       <div className="text-[11px] font-mono text-white">{evt.time}</div>
                                     </div>
-                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                    <div className="bg-card border border-white/5 rounded-xl p-3">
                                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">IP</div>
                                       <div className="text-[11px] font-mono text-white">{selectedAsset.ip}</div>
                                     </div>
-                                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3 flex items-center justify-between">
+                                    <div className="bg-card border border-white/5 rounded-xl p-3 flex items-center justify-between">
                                       <div>
                                         <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Operador</div>
                                         <div className="text-[11px] font-mono text-white">{evt.meta?.user ?? 'system'}</div>
                                       </div>
-                                      <div className="w-9 h-9 rounded-xl bg-industrial-950/40 border border-white/5 flex items-center justify-center text-gray-400">
+                                      <div className="w-9 h-9 rounded-xl bg-card border border-white/5 flex items-center justify-center text-gray-400">
                                         <User className="w-4 h-4" />
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="mt-4 bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                                  <div className="mt-4 bg-card border border-white/5 rounded-xl p-3">
                                     <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Payload</div>
                                     <div className="mt-1 text-[11px] font-mono text-gray-200 break-words">
                                       {JSON.stringify(evt.meta)}
@@ -1035,8 +1023,8 @@ const TrackingView = () => {
                 </div>
               </div>
 
-              <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-                <div className="bg-[#1F2937] px-6 py-4 border-b border-industrial-800 flex items-center justify-between">
+              <div className="bg-card border border-industrial-800 rounded-2xl overflow-hidden">
+                <div className="bg-card px-6 py-4 border-b border-industrial-800 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0B986A' }} />
                     <span className="text-xs font-bold uppercase tracking-widest text-white">Salud (24h)</span>
@@ -1045,7 +1033,7 @@ const TrackingView = () => {
                 </div>
 
                 <div className="p-6">
-                  <div className="h-56 w-full bg-industrial-950/30 rounded-2xl border border-industrial-800 p-4">
+                  <div className="h-56 w-full bg-card rounded-2xl border border-industrial-800 p-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={uptimeData}>
                         <defs>
@@ -1067,11 +1055,11 @@ const TrackingView = () => {
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                    <div className="bg-card border border-white/5 rounded-xl p-3">
                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Promedio</div>
                       <div className="text-lg font-black text-white">94.1%</div>
                     </div>
-                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                    <div className="bg-card border border-white/5 rounded-xl p-3">
                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Mínimo</div>
                       <div className="text-lg font-black" style={{ color: '#F51E1E' }}>78.0%</div>
                     </div>
@@ -1169,8 +1157,8 @@ const UsersView = () => {
     <div className="flex-1 flex flex-col p-8 gap-8 overflow-y-auto bg-industrial-950 relative">
       <div className="flex items-start justify-between gap-6">
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-industrial-900 border border-industrial-800 rounded-lg">
-            <ShieldCheck className="w-6 h-6 text-siac-active" />
+          <div className="p-2 bg-card border border-industrial-800 rounded-lg">
+            <ShieldCheck className="w-6 h-6 text-siac-accent" />
           </div>
           <div className="space-y-1">
             <div className="text-2xl font-bold text-white tracking-tight">Gestión de Usuarios (IAM)</div>
@@ -1188,12 +1176,12 @@ const UsersView = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar usuario, rol o departamento..."
-              className="bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-active w-72 transition-all"
+              className="bg-card border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent w-72 transition-all"
             />
           </div>
           <button
             onClick={handleAddOperator}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-siac-active hover:brightness-110 text-industrial-950 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-siac-accent hover:brightness-110 text-industrial-950 transition-all"
           >
             <UserPlus className="w-4 h-4" />
             Añadir Operador
@@ -1203,8 +1191,8 @@ const UsersView = () => {
 
       {filteredUsers.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="bg-industrial-900 border border-industrial-800 rounded-2xl p-10 text-center max-w-xl w-full">
-            <div className="mx-auto w-14 h-14 rounded-2xl bg-industrial-950/50 border border-white/5 flex items-center justify-center">
+          <div className="bg-card border border-industrial-800 rounded-2xl p-10 text-center max-w-xl w-full">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-card border border-white/5 flex items-center justify-center">
               <Users className="w-7 h-7 text-gray-400" />
             </div>
             <div className="mt-6 space-y-2">
@@ -1222,20 +1210,20 @@ const UsersView = () => {
                 key={u.id}
                 whileHover={{ y: -4 }}
                 onClick={() => setSelectedUser(u)}
-                className="text-left bg-[#1F2937]/50 border border-white/5 rounded-2xl px-5 pt-5 pb-16 relative overflow-hidden group transition-colors hover:border-white/10"
+                className="text-left bg-card border border-white/5 rounded-2xl px-5 pt-5 pb-16 relative overflow-hidden group transition-colors hover:border-white/10"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 min-w-0">
                     <div className="relative shrink-0">
-                      <div className="w-12 h-12 rounded-full bg-industrial-950/40 border border-white/5 flex items-center justify-center text-white font-bold">
+                      <div className="w-12 h-12 rounded-full bg-card border border-white/5 flex items-center justify-center text-white font-bold">
                         {String(u.name).split(' ').slice(0, 2).map((p: string) => p[0]).join('')}
                       </div>
                       {statusDot(!!u.active)}
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-white truncate">{u.name}</div>
-                      <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500 truncate">{u.title}</div>
-                      <div className="text-[11px] font-mono text-gray-300 truncate">{u.email}</div>
+                      <div className="text-[10px] font-mono text-gray-500 truncate">Email: {u.email}</div>
+                      <div className="text-[11px] font-mono text-gray-300 truncate">{u.title}</div>
                       <div className="mt-3 flex items-center gap-2">
                         <span
                           className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
@@ -1254,11 +1242,11 @@ const UsersView = () => {
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                  <div className="bg-card border border-white/5 rounded-xl p-3">
                     <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Último Acceso</div>
                     <div className="text-[11px] font-mono text-white">{u.lastAccess}</div>
                   </div>
-                  <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                  <div className="bg-card border border-white/5 rounded-xl p-3">
                     <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Activos Asignados</div>
                     <div className="text-[11px] font-mono text-white">{u.assetsAssigned}</div>
                   </div>
@@ -1268,21 +1256,21 @@ const UsersView = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedUser(u); }}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-industrial-950/40 border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-card border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                     >
                       <UserCog className="w-4 h-4 text-gray-300" />
                       Editar Permisos
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); updateUser(u.id, { active: !u.active }); }}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-industrial-950/40 border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-card border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                     >
                       <Unlock className="w-4 h-4" style={{ color: u.active ? '#F51E1E' : '#0B986A' }} />
                       {u.active ? 'Suspender' : 'Reactivar'}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedUser(u); }}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-industrial-950/40 border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-card border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                     >
                       <Key className="w-4 h-4 text-gray-300" />
                       Log de Actividad
@@ -1310,12 +1298,12 @@ const UsersView = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute top-0 right-0 h-full w-[480px] bg-[#1F2937] border-l border-siac-active/30 z-[70] shadow-2xl flex flex-col"
+              className="absolute top-0 right-0 h-full w-[480px] bg-card border-l border-siac-accent/30 z-[70] shadow-2xl flex flex-col"
             >
-              <div className="px-6 py-5 border-b border-industrial-800 bg-[#1F2937] flex items-start justify-between gap-4">
+              <div className="px-6 py-5 border-b border-industrial-800 bg-card flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4 min-w-0">
                   <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-industrial-950/40 border border-white/5 flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 rounded-full bg-card border border-white/5 flex items-center justify-center text-white font-bold">
                       {String(selectedUser.name).split(' ').slice(0, 2).map((p: string) => p[0]).join('')}
                     </div>
                     {statusDot(!!selectedUser.active)}
@@ -1343,25 +1331,25 @@ const UsersView = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
+                <div className="bg-card border border-white/5 rounded-2xl p-5">
                   <div className="flex items-center justify-between">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Accesos</div>
                     <div className="text-[10px] font-mono uppercase text-gray-500">{selectedUser.id}</div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                    <div className="bg-card border border-white/5 rounded-xl p-3">
                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Último Acceso</div>
                       <div className="text-[11px] font-mono text-white">{selectedUser.lastAccess}</div>
                     </div>
-                    <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-3">
+                    <div className="bg-card border border-white/5 rounded-xl p-3">
                       <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Activos Asignados</div>
                       <div className="text-[11px] font-mono text-white">{selectedUser.assetsAssigned}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-                  <div className="bg-[#1F2937] px-5 py-4 border-b border-industrial-800 flex items-center justify-between">
+                <div className="bg-card border border-industrial-800 rounded-2xl overflow-hidden">
+                  <div className="bg-card px-5 py-4 border-b border-industrial-800 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <UserCog className="w-4 h-4 text-gray-300" />
                       <span className="text-xs font-bold uppercase tracking-widest text-white">Permisos por Zona</span>
@@ -1370,7 +1358,7 @@ const UsersView = () => {
                   </div>
                   <div className="p-5 grid grid-cols-1 gap-2">
                     {zones.map((z) => (
-                      <label key={z} className="flex items-center justify-between gap-3 bg-industrial-950/30 border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors">
+                      <label key={z} className="flex items-center justify-between gap-3 bg-card border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors">
                         <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
@@ -1386,8 +1374,8 @@ const UsersView = () => {
                   </div>
                 </div>
 
-                <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-                  <div className="bg-[#1F2937] px-5 py-4 border-b border-industrial-800 flex items-center justify-between">
+                <div className="bg-card border border-industrial-800 rounded-2xl overflow-hidden">
+                  <div className="bg-card px-5 py-4 border-b border-industrial-800 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Key className="w-4 h-4 text-gray-300" />
                       <span className="text-xs font-bold uppercase tracking-widest text-white">Permisos de Cámaras</span>
@@ -1396,7 +1384,7 @@ const UsersView = () => {
                   </div>
                   <div className="p-5 grid grid-cols-1 gap-2">
                     {cameras.map((c) => (
-                      <label key={c} className="flex items-center justify-between gap-3 bg-industrial-950/30 border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors">
+                      <label key={c} className="flex items-center justify-between gap-3 bg-card border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors">
                         <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
@@ -1413,7 +1401,7 @@ const UsersView = () => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-industrial-800 bg-industrial-950/50 grid grid-cols-2 gap-4">
+              <div className="p-6 border-t border-industrial-800 bg-card grid grid-cols-2 gap-4">
                 <button
                   onClick={() => {
                     updateUser(selectedUser.id, { active: !selectedUser.active });
@@ -1429,7 +1417,7 @@ const UsersView = () => {
                     updateUser(selectedUser.id, { zones: draftZones, cameras: draftCameras });
                     setSelectedUser(null);
                   }}
-                  className="flex items-center justify-center gap-2 py-3 bg-siac-active hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+                  className="flex items-center justify-center gap-2 py-3 bg-siac-accent hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
                 >
                   Guardar Permisos
                 </button>
@@ -1485,7 +1473,7 @@ const SettingsView = () => {
       onClick={() => onChange(!checked)}
       className={cn(
         "w-11 h-6 rounded-full border transition-all relative",
-        checked ? "bg-siac-active/20 border-siac-active/40" : "bg-white/[0.04] border-white/10"
+        checked ? "bg-siac-accent/20 border-siac-accent/40" : "bg-white/[0.04] border-white/10"
       )}
       aria-pressed={checked}
     >
@@ -1511,12 +1499,12 @@ const SettingsView = () => {
       onClick={() => setActiveTab(id)}
       className={cn(
         "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all",
-        activeTab === id ? "bg-siac-active/10 border-siac-active/20 text-white" : "bg-white/[0.02] border-white/5 text-gray-300 hover:bg-white/[0.03] hover:border-white/10"
+        activeTab === id ? "bg-siac-accent/10 border-siac-accent/20 text-white" : "bg-white/[0.02] border-white/5 text-gray-300 hover:bg-white/[0.03] hover:border-white/10"
       )}
     >
       <div className={cn(
         "w-9 h-9 rounded-lg border flex items-center justify-center",
-        activeTab === id ? "border-siac-active/30 bg-siac-active/10" : "border-white/10 bg-industrial-950/30"
+        activeTab === id ? "border-siac-accent/30 bg-siac-accent/10" : "border-white/10 bg-industrial-950/30"
       )}>
         {icon}
       </div>
@@ -1533,8 +1521,8 @@ const SettingsView = () => {
     <div className="flex-1 flex flex-col p-8 gap-6 overflow-y-auto bg-industrial-950 relative">
       <div className="flex items-start justify-between gap-6">
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-industrial-900 border border-industrial-800 rounded-lg">
-            <Settings className="w-6 h-6 text-siac-active" />
+          <div className="p-2 bg-card border border-industrial-800 rounded-lg">
+            <Settings className="w-6 h-6 text-siac-accent" />
           </div>
           <div className="space-y-1">
             <div className="text-2xl font-bold text-white tracking-tight">Configuración</div>
@@ -1544,7 +1532,7 @@ const SettingsView = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 items-start">
-        <div className="bg-[#161D31] border border-white/5 rounded-2xl p-4 space-y-3">
+        <div className="bg-card border border-white/5 rounded-2xl p-4 space-y-3">
           <div className="px-2 pb-2 border-b border-white/5">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Secciones</div>
           </div>
@@ -1556,8 +1544,8 @@ const SettingsView = () => {
 
         <div className="space-y-6">
           {activeTab === 'general' && (
-            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-card px-6 py-5 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Globe className="w-4 h-4 text-gray-300" />
                   <div>
@@ -1588,8 +1576,8 @@ const SettingsView = () => {
           )}
 
           {activeTab === 'umbrales' && (
-            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-card px-6 py-5 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Sliders className="w-4 h-4 text-gray-300" />
                   <div>
@@ -1606,7 +1594,7 @@ const SettingsView = () => {
                       <div className="text-xs font-bold uppercase tracking-widest text-white">Sensibilidad de Sensores</div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Detección / ruido de señal</div>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-siac-active/30 bg-siac-active/10 text-siac-active">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-siac-accent/30 bg-siac-accent/10 text-siac-accent">
                       {sensorSensitivity}%
                     </span>
                   </div>
@@ -1629,7 +1617,7 @@ const SettingsView = () => {
                       <div className="text-xs font-bold uppercase tracking-widest text-white">Tiempo de Timeout</div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Reintento / heartbeat</div>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-siac-active/30 bg-siac-active/10 text-siac-active">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-siac-accent/30 bg-siac-accent/10 text-siac-accent">
                       {timeoutSeconds}s
                     </span>
                   </div>
@@ -1650,8 +1638,8 @@ const SettingsView = () => {
           )}
 
           {activeTab === 'seguridad' && (
-            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-card px-6 py-5 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Shield className="w-4 h-4 text-gray-300" />
                   <div>
@@ -1674,7 +1662,7 @@ const SettingsView = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={generateApiKey}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-industrial-900 border border-white/10 hover:border-white/20 text-[10px] font-bold uppercase tracking-widest text-white transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-white/10 hover:border-white/20 text-[10px] font-bold uppercase tracking-widest text-white transition-colors"
                       >
                         <RefreshCw className="w-4 h-4 text-gray-300" />
                         Generar Nueva
@@ -1683,19 +1671,19 @@ const SettingsView = () => {
                         onClick={copyApiKey}
                         className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-colors",
-                          copied ? "bg-siac-active/10 border-siac-active/30 text-siac-active" : "bg-industrial-900 border-white/10 hover:border-white/20 text-white"
+                          copied ? "bg-siac-accent/10 border-siac-accent/30 text-siac-accent" : "bg-card border-white/10 hover:border-white/20 text-white"
                         )}
                       >
                         Copiar
                       </button>
                     </div>
                   </div>
-                  <div className="mt-4 bg-[#1F2937]/60 border border-white/5 rounded-xl px-4 py-3 font-mono text-[11px] text-gray-200 overflow-hidden">
+                  <div className="mt-4 bg-card/60 border border-white/5 rounded-xl px-4 py-3 font-mono text-[11px] text-gray-200 overflow-hidden">
                     {apiKey}
                   </div>
                   <div className="mt-3 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-gray-500">
                     <span>Scope: edge-api</span>
-                    <span className={cn(copied ? "text-siac-active" : "text-gray-500")}>{copied ? 'Copiado' : 'Listo'}</span>
+                    <span className={cn(copied ? "text-siac-accent" : "text-gray-500")}>{copied ? 'Copiado' : 'Listo'}</span>
                   </div>
                 </div>
               </div>
@@ -1703,8 +1691,8 @@ const SettingsView = () => {
           )}
 
           {activeTab === 'apariencia' && (
-            <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
+              <div className="bg-card px-6 py-5 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Palette className="w-4 h-4 text-gray-300" />
                   <div>
@@ -1742,8 +1730,8 @@ const SettingsView = () => {
             </div>
           )}
 
-          <div className="bg-[#161D31] border border-white/5 rounded-2xl overflow-hidden">
-            <div className="bg-[#1F2937] px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-card px-6 py-5 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Database className="w-4 h-4 text-gray-300" />
                 <div>
@@ -1802,9 +1790,9 @@ const SettingsView = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
               transition={{ type: 'spring', damping: 25, stiffness: 240 }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[90] w-[520px] bg-[#161D31] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[90] w-[520px] bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
             >
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-white/10 flex items-start justify-between gap-4">
+              <div className="bg-card px-6 py-5 border-b border-white/10 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl border border-[#F51E1E40] bg-[#F51E1E10] flex items-center justify-center">
                     <Database className="w-5 h-5" style={{ color: '#F51E1E' }} />
@@ -1899,7 +1887,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
             </p>
           </div>
           <div className="flex flex-col md:flex-row items-center gap-4 justify-center md:justify-start">
-            <div className="bg-industrial-900 border border-border-card p-4 rounded-xl w-full md:w-auto text-center md:text-left">
+            <div className="bg-card border border-border-card p-4 rounded-xl w-full md:w-auto text-center md:text-left">
               <div className="text-3xl font-mono text-siac-accent">
                 <AnimatedInt value={20347} durationMs={1200} format={(v) => v.toLocaleString('en-US')} />
               </div>
@@ -1908,7 +1896,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
             <div className="hidden md:block w-px h-12 bg-white/10" />
             <div className="flex -space-x-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-industrial-950 bg-industrial-900 flex items-center justify-center text-[10px] font-bold">
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-industrial-950 bg-card flex items-center justify-center text-[10px] font-bold">
                   U{i}
                 </div>
               ))}
@@ -1917,7 +1905,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
         </div>
 
         <motion.div 
-          className="bg-industrial-900 border border-border-card p-8 rounded-2xl shadow-2xl relative group"
+          className="bg-card border border-border-card p-8 rounded-2xl shadow-2xl relative group"
           whileHover={{ borderColor: 'rgba(77,196,147,0.35)' }}
         >
           <div className="absolute -top-4 -right-4 w-24 h-24 bg-siac-accent/5 blur-3xl rounded-full" />
@@ -1973,7 +1961,7 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
       whileHover={{ y: -4 }}
       onClick={onClick}
       className={cn(
-        "bg-industrial-900 border border-border-card border-t-2 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
+        "bg-card border border-border-card border-t-2 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
         active ? "ring-1 ring-siac-accent/35 border-siac-accent/25" : "hover:border-white/15"
       )}
       style={{ borderTopColor: hex }}
@@ -2080,7 +2068,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1F2937] border border-siac-accent p-2 rounded shadow-2xl">
+        <div className="bg-card border border-siac-accent p-2 rounded shadow-2xl">
           <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2">
@@ -2103,7 +2091,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
       className="space-y-8"
     >
       {/* Search & Filter Bar */}
-      <div className="bg-industrial-900 p-4 rounded-xl border border-white/10 flex flex-wrap items-center gap-4">
+      <div className="bg-card p-4 rounded-xl border border-white/10 flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[240px]">
           <div className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">Instalación</div>
           <div className="relative">
@@ -2111,7 +2099,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             <select 
               value={selectedInstallation}
               onChange={(e) => handleInstallationChange(e.target.value)}
-              className="w-full bg-industrial-900 border border-border-card rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-siac-accent/50 transition-all appearance-none text-white font-bold"
+              className="w-full bg-card border border-border-card rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-siac-accent/50 transition-all appearance-none text-white font-bold"
             >
               <option value="Parque Solar Don Humberto">Parque Solar Don Humberto</option>
               <option value="Planta Norte">Planta Norte</option>
@@ -2128,7 +2116,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             <input 
               type="text" 
               defaultValue="25-04-2026"
-              className="w-full bg-industrial-900 border border-border-card rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-all font-mono text-white"
+              className="w-full bg-card border border-border-card rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-all font-mono text-white"
             />
           </div>
         </div>
@@ -2161,7 +2149,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-[600px] flex flex-col items-center justify-center gap-4 bg-industrial-900/50 rounded-2xl border border-white/5"
+            className="h-[600px] flex flex-col items-center justify-center gap-4 bg-card/50 rounded-2xl border border-white/5"
           >
             <div className="w-12 h-12 border-4 border-siac-accent border-t-transparent rounded-full animate-spin" />
             <span className="text-xs font-bold text-siac-accent uppercase tracking-[0.2em]">Re-configurando entorno...</span>
@@ -2174,7 +2162,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             className="space-y-8"
           >
             {/* Main Report Card */}
-            <div className="bg-industrial-900 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+            <div className="bg-card rounded-xl border border-white/10 overflow-hidden shadow-2xl">
               <div className="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-siac-accent" />
@@ -2237,30 +2225,28 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                     <div className="w-1 h-3 bg-siac-green rounded-full" />
-                    Estado de Sensores en el Período
+                    Salud de Dispositivos
                   </h4>
-                  <div className="bg-industrial-950/30 border border-white/5 rounded-xl p-6">
-                    <div className="grid grid-cols-5 md:grid-cols-10 gap-4">
-                      {deviceHealth.map((device) => (
-                        <motion.div 
-                          key={device.id}
-                          whileHover={{ y: -2 }}
-                          className="flex flex-col items-center gap-2 p-3 bg-industrial-900/50 border border-white/5 rounded-lg group cursor-help"
-                        >
-                          <div className="relative">
-                            {device.type === 'Camera' && <Camera className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
-                            {device.type === 'PIR' && <Radio className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
-                            {device.type === 'GW' && <Cpu className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
-                            {device.type === 'Activo' && <Activity className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
-                            <div className={cn(
-                              "absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-industrial-900",
-                              device.status === 'OK' ? "bg-siac-armed" : device.status === 'ALERTA' ? "bg-siac-blocked" : "bg-siac-disarmed"
-                            )} />
-                          </div>
-                          <span className="text-[8px] font-mono text-gray-500">#{device.id}04</span>
-                        </motion.div>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {deviceHealth.map((device) => (
+                      <motion.div 
+                        key={device.id}
+                        whileHover={{ y: -2 }}
+                        className="flex flex-col items-center gap-2 p-3 bg-card/50 border border-white/5 rounded-lg group cursor-help"
+                      >
+                        <div className="relative">
+                          {device.type === 'Camera' && <Camera className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                          {device.type === 'PIR' && <Radio className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                          {device.type === 'GW' && <Cpu className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                          {device.type === 'Activo' && <Activity className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />}
+                          <div className={cn(
+                            "absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-industrial-900",
+                            device.status === 'OK' ? "bg-siac-armed" : device.status === 'ALERTA' ? "bg-siac-blocked" : "bg-siac-disarmed"
+                          )} />
+                        </div>
+                        <span className="text-[8px] font-mono text-gray-500">#{device.id}04</span>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
 
@@ -2274,7 +2260,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                     {/* Alarmas Sparkline */}
                     <motion.div 
                       whileHover={{ scale: 1.01 }}
-                      className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg"
+                      className="bg-card border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-accent/30 transition-all shadow-lg"
                     >
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -2310,7 +2296,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                     {/* Tiempos Sparkline */}
                     <motion.div 
                       whileHover={{ scale: 1.01 }}
-                      className="bg-industrial-900 border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-active/30 transition-all shadow-lg"
+                      className="bg-card border border-white/10 rounded-xl p-5 space-y-4 group hover:border-siac-accent/30 transition-all shadow-lg"
                     >
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -2334,12 +2320,12 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                       </div>
                       <div className="flex items-center justify-between pt-3 border-t border-white/5">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-siac-active/10 rounded-lg">
-                            <Clock className="w-3 h-3 text-siac-active" />
+                          <div className="p-1.5 bg-siac-accent/10 rounded-lg">
+                            <Clock className="w-3 h-3 text-siac-accent" />
                           </div>
                           <span className="text-[10px] text-gray-400 font-bold uppercase">Eficiencia Operativa</span>
                         </div>
-                        <span className="text-xs font-bold text-siac-active">ÓPTIMO</span>
+                        <span className="text-xs font-bold text-siac-accent">ÓPTIMO</span>
                       </div>
                     </motion.div>
                   </div>
@@ -2432,7 +2418,7 @@ const InteractiveMapView = () => {
   };
 
   const renderIcon = (tipo: string, color: string = "white") => {
-    const iconClass = cn("w-5 h-5", color === "white" ? "text-white" : "text-siac-active");
+    const iconClass = cn("w-5 h-5", color === "white" ? "text-white" : "text-siac-accent");
     switch (tipo) {
       case 'Cámara':
       case 'Camera': return <Camera className={iconClass} />;
@@ -2453,12 +2439,12 @@ const InteractiveMapView = () => {
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 10 }}
-      className="absolute z-50 bg-[#1F2937] border-2 border-siac-active rounded-xl shadow-2xl p-4 w-64 pointer-events-auto"
+      className="absolute z-50 bg-card border-2 border-siac-accent rounded-xl shadow-2xl p-4 w-64 pointer-events-auto"
       style={{ left: `${sensor.x}%`, top: `${sensor.y - 15}%`, transform: 'translateX(-50%)' }}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          {renderIcon(sensor.tipo, "siac-active")}
+          {renderIcon(sensor.tipo, "siac-accent")}
           <span className="text-xs font-bold text-white uppercase">{sensor.label}</span>
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
@@ -2474,7 +2460,7 @@ const InteractiveMapView = () => {
                 key={i}
                 initial={{ height: 0 }}
                 animate={{ height: `${h}%` }}
-                className="flex-1 bg-siac-active/40 rounded-t-sm"
+                className="flex-1 bg-siac-accent/40 rounded-t-sm"
               />
             ))}
           </div>
@@ -2483,7 +2469,7 @@ const InteractiveMapView = () => {
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-industrial-950/30 p-2 rounded-lg">
             <div className="text-[8px] text-gray-500 uppercase font-bold">Estado</div>
-            <div className="text-[10px] font-bold text-siac-active uppercase">{sensor.estado}</div>
+            <div className="text-[10px] font-bold text-siac-accent uppercase">{sensor.estado}</div>
           </div>
           <div className="bg-industrial-950/30 p-2 rounded-lg">
             <div className="text-[8px] text-gray-500 uppercase font-bold">Tendencia</div>
@@ -2599,7 +2585,7 @@ const InteractiveMapView = () => {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="absolute bottom-[80px] left-8 z-50 w-[380px] bg-[#1F2937] border-2 border-siac-active rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+            className="absolute bottom-[80px] left-8 z-50 w-[380px] bg-card border-2 border-siac-accent rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
           >
             <div className="relative">
               <button 
@@ -2618,8 +2604,8 @@ const InteractiveMapView = () => {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
                 <div className="absolute top-4 left-4 flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
-                    <span className="text-[10px] font-mono text-siac-active font-bold tracking-widest uppercase">REC • {selectedCamera.label}</span>
+                    <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
+                    <span className="text-[10px] font-mono text-siac-accent font-bold tracking-widest uppercase">REC • {selectedCamera.label}</span>
                   </div>
                   <span className="text-[8px] font-mono text-gray-400">CAM_ID: {selectedCamera.id} | 2026-04-26</span>
                 </div>
@@ -2633,10 +2619,10 @@ const InteractiveMapView = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[8px] text-gray-500 uppercase font-bold">Estado</span>
-                    <span className="text-[10px] text-siac-active font-bold uppercase">Conectado</span>
+                    <span className="text-[10px] text-siac-accent font-bold uppercase">Conectado</span>
                   </div>
                 </div>
-                <button className="px-4 py-1.5 bg-siac-active text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all uppercase tracking-widest">
+                <button className="px-4 py-1.5 bg-siac-accent text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all uppercase tracking-widest">
                   PTZ Control
                 </button>
               </div>
@@ -2650,23 +2636,23 @@ const InteractiveMapView = () => {
         "absolute bottom-0 left-1/2 -translate-x-1/2 z-40 w-[85%] max-w-[1000px] transition-all duration-500 transform",
         isAlarmsCollapsed ? "translate-y-[calc(100%-56px)]" : "translate-y-[-20px]"
       )}>
-        <div className="bg-industrial-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
           {/* Technical Header */}
-          <div className="px-6 py-4 bg-[#1F2937] flex items-center justify-between border-b border-white/5">
+          <div className="px-6 py-4 bg-card flex items-center justify-between border-b border-white/5">
             <div className="flex items-center gap-4">
-              <div className="w-8 h-8 rounded-lg bg-siac-active/10 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-siac-active" />
+              <div className="w-8 h-8 rounded-lg bg-siac-accent/10 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-siac-accent" />
               </div>
               <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white">Listado de alarmas</h3>
             </div>
             
             <div className="flex items-center gap-6">
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-siac-active transition-colors" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-siac-accent transition-colors" />
                 <input 
                   type="text"
                   placeholder="BUSCAR EVENTO TÉCNICO..."
-                  className="bg-industrial-950/50 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-[10px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-siac-active/50 w-64 transition-all"
+                  className="bg-industrial-950/50 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-[10px] font-bold text-white placeholder:text-gray-600 focus:outline-none focus:border-siac-accent/50 w-64 transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -2675,7 +2661,7 @@ const InteractiveMapView = () => {
                 onClick={() => setIsAlarmsCollapsed(!isAlarmsCollapsed)}
                 className="p-2 hover:bg-white/5 rounded-full transition-all group"
               >
-                <ChevronDown className={cn("w-6 h-6 text-siac-active transition-transform duration-500", isAlarmsCollapsed ? "rotate-180" : "")} />
+                <ChevronDown className={cn("w-6 h-6 text-siac-accent transition-transform duration-500", isAlarmsCollapsed ? "rotate-180" : "")} />
               </button>
             </div>
           </div>
@@ -2701,16 +2687,16 @@ const InteractiveMapView = () => {
                         "inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-wider transition-all",
                         alarm.estado === 'Pendiente' 
                           ? "border-orange-500/30 text-orange-500 bg-orange-500/5 shadow-[0_0_10px_rgba(249,115,22,0.1)]" 
-                          : "border-siac-active/30 text-siac-active bg-siac-active/5 shadow-[0_0_10px_rgba(77,196,147,0.1)]"
+                          : "border-siac-accent/30 text-siac-accent bg-siac-accent/5 shadow-[0_0_10px_rgba(77,196,147,0.1)]"
                       )}>
-                        <div className={cn("w-1.5 h-1.5 rounded-full", alarm.estado === 'Pendiente' ? "bg-orange-500" : "bg-siac-active")} />
+                        <div className={cn("w-1.5 h-1.5 rounded-full", alarm.estado === 'Pendiente' ? "bg-orange-500" : "bg-siac-accent")} />
                         {alarm.estado}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-gray-300 group-hover:text-siac-active transition-colors">{alarm.dispositivo}</td>
+                    <td className="py-4 px-4 text-gray-300 group-hover:text-siac-accent transition-colors">{alarm.dispositivo}</td>
                     <td className="py-4 px-4 text-gray-500 uppercase tracking-tighter">{alarm.ubicacion}</td>
                     <td className="py-4 px-4 text-right">
-                      <button className="text-[10px] text-siac-active hover:text-white border border-siac-active/20 hover:border-siac-active px-3 py-1 rounded-md transition-all uppercase">
+                      <button className="text-[10px] text-siac-accent hover:text-white border border-siac-accent/20 hover:border-siac-accent px-3 py-1 rounded-md transition-all uppercase">
                         Ver Detalles
                       </button>
                     </td>
@@ -2721,7 +2707,7 @@ const InteractiveMapView = () => {
 
             {/* Pixel Perfect Pagination */}
             <div className="mt-8 flex items-center justify-center gap-6">
-              <button className="text-siac-active hover:scale-110 transition-transform disabled:opacity-30">
+              <button className="text-siac-accent hover:scale-110 transition-transform disabled:opacity-30">
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <div className="flex gap-3">
@@ -2731,7 +2717,7 @@ const InteractiveMapView = () => {
                     className={cn(
                       "w-9 h-9 rounded-xl text-[11px] font-bold transition-all border flex items-center justify-center",
                       n === 1 
-                        ? "bg-siac-active text-industrial-950 border-siac-active shadow-lg shadow-siac-active/20" 
+                        ? "bg-siac-accent text-industrial-950 border-siac-accent shadow-lg shadow-siac-accent/20" 
                         : "text-gray-500 border-white/5 hover:border-white/20 hover:text-white hover:bg-white/5"
                     )}
                   >
@@ -2739,7 +2725,7 @@ const InteractiveMapView = () => {
                   </button>
                 ))}
               </div>
-              <button className="text-siac-active hover:scale-110 transition-transform">
+              <button className="text-siac-accent hover:scale-110 transition-transform">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -2848,7 +2834,7 @@ const Dashboard = () => {
           En vivo · Actualizado hace {seconds}s
         </span>
         <div className="absolute left-0 top-full mt-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
-          <div className="bg-[#1F2937] border border-border-card rounded-lg px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-gray-300 shadow-2xl">
+          <div className="bg-card border border-border-card rounded-lg px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-gray-300 shadow-2xl">
             Datos actualizando en tiempo real
           </div>
         </div>
@@ -2869,7 +2855,7 @@ const Dashboard = () => {
               transition={{ duration: 0.2 }}
               className="pointer-events-auto"
             >
-              <div className="bg-industrial-900/85 backdrop-blur-md border border-border-card rounded-xl shadow-2xl overflow-hidden">
+              <div className="bg-card/85 backdrop-blur-md border border-border-card rounded-xl shadow-2xl overflow-hidden">
                 <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: `3px solid ${t.color}` }}>
                   <div className="flex-1">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.title}</div>
@@ -2910,7 +2896,7 @@ const Dashboard = () => {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 w-64 border-r border-industrial-800 flex flex-col bg-industrial-900 z-50 transform transition-transform duration-300 md:relative md:translate-x-0",
+        "fixed inset-y-0 left-0 w-64 border-r border-industrial-800 flex flex-col bg-card z-50 transform transition-transform duration-300 md:relative md:translate-x-0",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 flex items-center justify-between border-b border-industrial-800">
@@ -3057,7 +3043,7 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Header */}
-        <header className="h-16 border-b border-white/10 bg-industrial-900/30 backdrop-blur-md flex items-center justify-between px-4 md:px-8 shrink-0">
+        <header className="h-16 border-b border-white/10 bg-card/30 backdrop-blur-md flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-6">
             <button 
               onClick={() => setIsSidebarOpen(true)}
@@ -3278,7 +3264,7 @@ const Dashboard = () => {
                     </button>
                   </div>
                   
-                  <div className="aspect-video bg-industrial-900 rounded-2xl border border-white/5 relative overflow-hidden group">
+                  <div className="aspect-video bg-card rounded-2xl border border-white/5 relative overflow-hidden group">
                     {/* Blueprint / Technical Grid Background */}
                     <div className="absolute inset-0 opacity-20 pointer-events-none" 
                       style={{ 
@@ -3321,7 +3307,7 @@ const Dashboard = () => {
                         >
                           {/* Tooltip */}
                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                            <div className="bg-industrial-900/90 backdrop-blur-md border border-border-card rounded-xl px-3 py-2 shadow-2xl w-max">
+                            <div className="bg-card/90 backdrop-blur-md border border-border-card rounded-xl px-3 py-2 shadow-2xl w-max">
                               <div className="flex items-center gap-2">
                                 <div className="text-[10px] font-bold text-white">{pin.nombre || pin.id || 'N/A'}</div>
                                 <span className={cn(
@@ -3432,7 +3418,7 @@ const Dashboard = () => {
                           initial={{ opacity: 0, scale: 0.9, y: 20 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                          className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-[450px] bg-industrial-900/95 backdrop-blur-xl border border-white/10 rounded-2xl z-40 shadow-2xl overflow-hidden"
+                          className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-[450px] bg-card/95 backdrop-blur-xl border border-white/10 rounded-2xl z-40 shadow-2xl overflow-hidden"
                         >
                           {/* CCTV Header */}
                           <div className="p-4 border-b border-white/5 flex items-center justify-between bg-industrial-950/50">
@@ -3517,7 +3503,7 @@ const Dashboard = () => {
                   <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-siac-accent" /> Instalaciones
                   </h3>
-                  <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
+                  <div className="bg-card border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
                     <div className="p-4 border-b border-white/5 bg-industrial-800/30">
                       <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
                     </div>
@@ -3571,7 +3557,7 @@ const Dashboard = () => {
                         <input 
                           type="text" 
                           placeholder="Buscar evento..." 
-                          className="w-full bg-industrial-900 border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-armed sm:w-48 lg:w-64"
+                          className="w-full bg-card border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-armed sm:w-48 lg:w-64"
                         />
                       </div>
                       <button className="bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
@@ -3580,7 +3566,7 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden">
+                  <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
                     <div className="p-4 bg-industrial-800/30 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide">
                       {['Todos', 'Cámara', 'Infrarrojo', 'PIR', 'GW', 'Activo'].map((f) => (
                         <button 
