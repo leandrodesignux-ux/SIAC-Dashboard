@@ -116,6 +116,27 @@ const buildSparkline = (data: number[], width = 40, height = 24) => {
   return { line, area };
 };
 
+const Sparkline = ({ data, colorHex }: { data: number[]; colorHex: string }) => {
+  const spark = buildSparkline(data, 40, 24);
+  return (
+    <svg width="40" height="24" viewBox="0 0 40 24" className="shrink-0 opacity-90">
+      {spark.area && (
+        <polygon points={spark.area} fill={hexToRgba(colorHex, 0.10)} />
+      )}
+      {spark.line && (
+        <polyline
+          points={spark.line}
+          fill="none"
+          stroke={colorHex}
+          strokeWidth="2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
+};
+
 const AnimatedInt = ({
   value,
   durationMs = 800,
@@ -165,6 +186,7 @@ interface KPI {
   total: number;
   status: 'OK' | 'ALERTA' | 'AVISO';
   color: string;
+  data?: number[];
 }
 
 interface Pin {
@@ -1954,8 +1976,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
 
 const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick: () => void }) => {
   const Icon = kpi.icon;
-  const hex = tokenToHex((kpi as any).color);
-  const spark = buildSparkline(((kpi as any).data || []) as number[], 40, 24);
+  const hex = tokenToHex(kpi.color);
   return (
     <motion.div 
       whileHover={{ y: -4 }}
@@ -1980,14 +2001,7 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
               <span className="text-xs text-gray-500 font-medium">/</span>
               <AnimatedInt value={kpi.total} durationMs={800} className="text-xs text-gray-500 font-medium" />
             </div>
-            <svg width="40" height="24" viewBox="0 0 40 24" className="shrink-0 opacity-90">
-              {spark.area && (
-                <polygon points={spark.area} fill={hexToRgba(hex, 0.10)} />
-              )}
-              {spark.line && (
-                <polyline points={spark.line} fill="none" stroke={hex} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-              )}
-            </svg>
+            <Sparkline data={kpi.data || []} colorHex={hex} />
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 truncate">{kpi.label}</span>
