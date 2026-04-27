@@ -55,7 +55,7 @@ import {
   Palette,
   RefreshCw
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { 
@@ -79,6 +79,69 @@ import {
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const tokenToHex = (token: string) => {
+  const t = String(token || '').replace(/^text-/, '').replace(/^bg-/, '').replace(/^border-/, '');
+  if (t === 'siac-accent' || t === 'siac-active') return '#4DC493';
+  if (t === 'siac-armed' || t === 'siac-green') return '#0B986A';
+  if (t === 'siac-disarmed' || t === 'siac-orange') return '#D89A1E';
+  if (t === 'siac-alarmed') return '#FAD92A';
+  if (t === 'siac-blocked' || t === 'siac-red') return '#F51E1E';
+  if (t === 'siac-off') return '#4A4949';
+  return '#FFFFFF';
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const h = hex.replace('#', '').trim();
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h.padEnd(6, '0').slice(0, 6);
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
+
+const buildSparkline = (data: number[], width = 40, height = 24) => {
+  const values = Array.isArray(data) ? data : [];
+  if (values.length < 2) return { line: '', area: '' };
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const points = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * (width - 2) + 1;
+    const y = (1 - (v - min) / span) * (height - 4) + 2;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  });
+  const line = points.join(' ');
+  const area = `${points[0]} ${line} ${points[points.length - 1].split(',')[0]},${height - 1} ${points[0].split(',')[0]},${height - 1}`;
+  return { line, area };
+};
+
+const AnimatedInt = ({
+  value,
+  durationMs = 800,
+  format,
+  className,
+}: {
+  value: number;
+  durationMs?: number;
+  format?: (v: number) => string;
+  className?: string;
+}) => {
+  const mv = useMotionValue(0);
+  const rounded = useTransform(mv, (v) => Math.round(v));
+  const [text, setText] = useState(() => (format ? format(0) : '0'));
+
+  useEffect(() => {
+    const controls = animate(mv, Number(value) || 0, { duration: durationMs / 1000, ease: 'easeOut' });
+    const unsub = rounded.on('change', (v) => setText(format ? format(v) : String(v)));
+    return () => {
+      controls.stop();
+      unsub();
+    };
+  }, [durationMs, format, mv, rounded, value]);
+
+  return <span className={className}>{text}</span>;
+};
 
 // --- Types ---
 type DeviceType = 'Cámara' | 'Infrarrojo' | 'PIR' | 'GW' | 'Activo';
@@ -143,8 +206,8 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
   const alarmKPIs = [
     { label: 'Alertas Totales', value: '1,284', trend: '+12%', color: 'text-white', data: [20, 35, 25, 45, 30, 55, 40] },
     { label: 'Críticas', value: '24', trend: '+5%', color: 'text-[#F51E1E]', data: [5, 12, 8, 15, 10, 18, 14] },
-    { label: 'Tiempo Resp. (Avg)', value: '4.2m', trend: '-8%', color: 'text-siac-active', data: [8, 6, 7, 5, 6, 4, 5] },
-    { label: 'Resolución', value: '98.2%', trend: '+0.5%', color: 'text-siac-active', data: [95, 96, 94, 97, 98, 97, 98] },
+    { label: 'Tiempo Resp. (Avg)', value: '4.2m', trend: '-8%', color: 'text-siac-accent', data: [8, 6, 7, 5, 6, 4, 5] },
+    { label: 'Resolución', value: '98.2%', trend: '+0.5%', color: 'text-siac-accent', data: [95, 96, 94, 97, 98, 97, 98] },
   ];
 
   const alarmsData = [
@@ -249,7 +312,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               <input 
                 type="text" 
                 placeholder="Buscar evento o activo..."
-                className="bg-industrial-900 border border-industrial-800 rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-active w-64 transition-all"
+                className="bg-industrial-900 border border-border-card rounded-lg py-2 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent/50 w-64 transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -259,7 +322,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 onClick={() => setIsFilterOpen(v => !v)}
                 className={cn(
                   "flex items-center gap-2 bg-industrial-900 border px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                  isFilterOpen ? "border-siac-active/40 text-white" : "border-industrial-800 text-gray-400 hover:text-white"
+                  isFilterOpen ? "border-siac-accent/40 text-white" : "border-border-card text-gray-400 hover:text-white"
                 )}
               >
                 <Filter className="w-4 h-4" />
@@ -280,11 +343,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       initial={{ opacity: 0, y: 8, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      className="absolute right-0 mt-2 w-[360px] bg-[#1F2937] border border-industrial-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-2 w-[360px] bg-[#1F2937] border border-border-card rounded-2xl shadow-2xl z-50 overflow-hidden"
                     >
                       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-4 bg-siac-active rounded-full" />
+                          <div className="w-1.5 h-4 bg-siac-accent rounded-full" />
                           <span className="text-[10px] font-bold uppercase tracking-widest text-white">Filtros</span>
                         </div>
                         <button
@@ -314,7 +377,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                                         prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
                                       ));
                                     }}
-                                    className="accent-[#0B986A]"
+                                    className="accent-siac-accent"
                                   />
                                   <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
                                 </label>
@@ -339,7 +402,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                                           prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
                                         ));
                                       }}
-                                      className="accent-[#0B986A]"
+                                      className="accent-siac-accent"
                                     />
                                     <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
                                   </div>
@@ -365,11 +428,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-industrial-900 border border-industrial-800 p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-active/30 transition-all"
+              className="bg-industrial-900 border border-border-card p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-accent/30 transition-all"
             >
               <div className="flex justify-between items-start z-10">
                 <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">{kpi.label}</span>
-                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/20", kpi.trend.startsWith('+') ? 'text-siac-active' : 'text-siac-blocked')}>
+                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/20", kpi.trend.startsWith('+') ? 'text-siac-accent' : 'text-siac-blocked')}>
                   {kpi.trend}
                 </span>
               </div>
@@ -378,7 +441,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <div className="h-8 w-24">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={kpi.data.map((v, i) => ({ v, i }))}>
-                      <Line type="monotone" dataKey="v" stroke={kpi.color.includes('siac-active') ? '#4DC493' : kpi.color.includes('siac-blocked') ? '#F51E1E' : '#FFFFFF'} strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="v" stroke={kpi.color.includes('siac-accent') ? '#4DC493' : kpi.color.includes('siac-blocked') ? '#F51E1E' : '#FFFFFF'} strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -392,10 +455,10 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
       </div>
 
       {/* Alarms Table */}
-      <div className="flex-1 bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden flex flex-col">
-        <div className="bg-[#1F2937] px-6 py-4 flex items-center justify-between border-b border-industrial-800">
+      <div className="flex-1 bg-industrial-900 border border-border-card rounded-2xl overflow-hidden flex flex-col">
+        <div className="bg-[#1F2937] px-6 py-4 flex items-center justify-between border-b border-border-card">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-widest text-white">Listado de Eventos en Tiempo Real</span>
           </div>
           <span className="text-[10px] font-mono text-gray-500 uppercase">Total: {filteredAlarms.length} registros</span>
@@ -404,7 +467,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
         <div className="flex-1 overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-industrial-800">
+              <tr className="border-b border-border-card">
                 <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">ID Evento</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Timestamp</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Activo</th>
@@ -420,13 +483,19 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.05 }}
-                  className="group hover:bg-[#1F2937]/50 border-b border-industrial-800/50 transition-colors"
+                  className={cn(
+                    "group border-b border-border-card transition-colors",
+                    alarm.color === '#FAD92A' ? "bg-[rgba(250,217,42,0.04)]" : alarm.color === '#F51E1E' ? "bg-[rgba(245,30,30,0.04)]" : "hover:bg-[#1F2937]/50"
+                  )}
+                  style={{
+                    borderLeft: alarm.color === '#FAD92A' ? '3px solid #FAD92A' : alarm.color === '#F51E1E' ? '3px solid #F51E1E' : undefined,
+                  }}
                 >
                   <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.id}</td>
                   <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.timestamp}</td>
                   <td className="px-6 py-4 text-xs font-bold text-white uppercase">{alarm.activo}</td>
                   <td className="px-6 py-4 text-center">
-                    <div className="inline-flex p-1.5 bg-industrial-800 rounded-lg text-gray-500 group-hover:text-siac-active transition-colors">
+                    <div className="inline-flex p-1.5 bg-industrial-800 rounded-lg text-gray-500 group-hover:text-siac-accent transition-colors">
                       {renderIcon(alarm.tipo)}
                     </div>
                   </td>
@@ -442,7 +511,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => onNavigateToMap()}
-                        className="p-2 text-gray-500 hover:text-siac-active transition-all hover:bg-siac-active/10 rounded-lg"
+                        className="p-2 text-gray-500 hover:text-siac-accent transition-all hover:bg-siac-accent/10 rounded-lg"
                         title="Ver en Mapa"
                       >
                         <MapIcon className="w-4 h-4" />
@@ -462,7 +531,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="p-4 bg-industrial-800 rounded-full">
-                        <CheckCircle2 className="w-12 h-12 text-siac-active opacity-20" />
+                        <CheckCircle2 className="w-12 h-12 text-siac-accent opacity-20" />
                       </div>
                       <div className="space-y-1">
                         <p className="text-white font-bold uppercase tracking-widest">No hay alertas críticas en el sector</p>
@@ -493,9 +562,9 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute top-0 right-0 h-full w-[450px] bg-[#1F2937] border-l border-siac-active/30 z-[70] shadow-2xl flex flex-col"
+              className="absolute top-0 right-0 h-full w-[450px] bg-[#1F2937] border-l border-siac-accent/30 z-[70] shadow-2xl flex flex-col"
             >
-              <div className="px-6 py-5 border-b border-industrial-800 bg-[#1F2937]">
+              <div className="px-6 py-5 border-b border-border-card bg-[#1F2937]">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div 
@@ -536,11 +605,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               <div className="flex-1 overflow-y-auto p-6 space-y-8">
                 {/* Asset Info */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-industrial-800">
+                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-border-card">
                     <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Dirección IP</p>
                     <p className="text-xs font-mono text-white">{selectedAlarm.ip}</p>
                   </div>
-                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-industrial-800">
+                  <div className="bg-industrial-950/50 p-4 rounded-xl border border-border-card">
                     <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Ubicación Técnica</p>
                     <p className="text-xs font-mono text-white">{selectedAlarm.ubicacion}</p>
                   </div>
@@ -549,10 +618,10 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 {/* Activity Chart */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Actividad (Últimos 10 min)</h4>
+                    <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Actividad (Últimos 10 min)</h4>
                     <span className="text-[8px] font-mono text-gray-500 uppercase">Tiempo real • 100ms lag</span>
                   </div>
-                  <div className="h-48 w-full bg-industrial-950/30 rounded-2xl border border-industrial-800 p-4">
+                  <div className="h-48 w-full bg-industrial-950/30 rounded-2xl border border-border-card p-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={activityData}>
                         <defs>
@@ -576,10 +645,10 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Mapa Estático</h4>
+                    <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Mapa Estático</h4>
                     <span className="text-[8px] font-mono text-gray-500 uppercase">Ubicación técnica</span>
                   </div>
-                  <div className="h-36 w-full rounded-2xl border border-industrial-800 overflow-hidden bg-[#161D31] relative">
+                  <div className="h-36 w-full rounded-2xl border border-border-card overflow-hidden bg-[#161D31] relative">
                     <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(77,196,147,0.12)_0%,_transparent_55%)]" />
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
@@ -594,7 +663,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                         </div>
                         <button
                           onClick={() => onNavigateToMap()}
-                          className="text-[10px] font-bold uppercase tracking-widest text-siac-active hover:brightness-110 transition-all"
+                          className="text-[10px] font-bold uppercase tracking-widest text-siac-accent hover:brightness-110 transition-all"
                         >
                           Ver en Mapa
                         </button>
@@ -605,9 +674,9 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
 
                 {/* Timeline */}
                 <div className="space-y-4">
-                  <h4 className="text-[10px] uppercase font-bold text-siac-active tracking-widest">Timeline de Eventos</h4>
+                  <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Timeline de Eventos</h4>
                   <div className="space-y-6 pl-2 relative">
-                    <div className="absolute left-2.5 top-2 bottom-2 w-px bg-industrial-800" />
+                    <div className="absolute left-2.5 top-2 bottom-2 w-px bg-border-card" />
                     {[
                       { time: '14:22:10', msg: 'Umbral de seguridad excedido (Crítico)', type: 'error' },
                       { time: '14:20:05', msg: 'Incremento anómalo de actividad detectado', type: 'warn' },
@@ -617,7 +686,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       <div key={i} className="flex gap-4 relative z-10">
                         <div className={cn(
                           "w-2 h-2 rounded-full mt-1.5 ring-4 ring-industrial-950",
-                          step.type === 'error' ? 'bg-siac-blocked' : step.type === 'warn' ? 'bg-[#D89A1E]' : 'bg-siac-active'
+                          step.type === 'error' ? 'bg-siac-blocked' : step.type === 'warn' ? 'bg-[#D89A1E]' : 'bg-siac-accent'
                         )} />
                         <div className="flex-1">
                           <p className="text-[10px] font-mono text-gray-500 mb-1">{step.time}</p>
@@ -629,11 +698,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-industrial-800 bg-industrial-950/50 grid grid-cols-2 gap-4">
+              <div className="p-6 border-t border-border-card bg-industrial-950/50 grid grid-cols-2 gap-4">
                 <button className="flex items-center justify-center gap-2 py-3 bg-industrial-800 hover:bg-industrial-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
                   Generar Reporte
                 </button>
-                <button className="flex items-center justify-center gap-2 py-3 bg-siac-active hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
+                <button className="flex items-center justify-center gap-2 py-3 bg-siac-accent hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
                   Resolver Alarma
                 </button>
               </div>
@@ -737,7 +806,7 @@ const TrackingView = () => {
     }
     return (
       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
-        style={{ color: '#0B986A', borderColor: '#0B986A40', backgroundColor: '#0B986A10' }}
+        style={{ color: '#4DC493', borderColor: '#4DC49340', backgroundColor: '#4DC49310' }}
       >
         Online
       </span>
@@ -745,18 +814,18 @@ const TrackingView = () => {
   };
 
   const eventColor = (evt: any) => {
-    if (evt?.kind === 'operational') return '#0B986A';
+    if (evt?.kind === 'operational') return '#4DC493';
     if (evt?.kind === 'alert') return evt?.level === 'warning' ? '#D89A1E' : '#F51E1E';
     return '#9CA3AF';
   };
 
   return (
     <div className="flex-1 flex overflow-hidden bg-industrial-950">
-      <div className="w-[32%] min-w-[360px] max-w-[460px] border-r border-industrial-800 bg-industrial-900 flex flex-col">
-        <div className="p-6 border-b border-industrial-800">
+      <div className="w-[32%] min-w-[360px] max-w-[460px] border-r border-border-card bg-industrial-900 flex flex-col">
+        <div className="p-6 border-b border-border-card">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-industrial-950/50 border border-white/5">
-              <Locate className="w-5 h-5 text-siac-active" />
+              <Locate className="w-5 h-5 text-siac-accent" />
             </div>
             <div className="flex flex-col">
               <div className="text-sm font-bold uppercase tracking-widest text-white">Seguimiento</div>
@@ -770,7 +839,7 @@ const TrackingView = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar activo (ID, IP, tipo...)"
-              className="w-full bg-industrial-950/40 border border-industrial-800 rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-active transition-all"
+              className="w-full bg-industrial-950/40 border border-border-card rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-siac-accent/50 transition-all"
             />
           </div>
         </div>
@@ -783,7 +852,7 @@ const TrackingView = () => {
                 key={a.id}
                 onClick={() => { setSelectedAsset(a); setSelectedEventId(null); }}
                 className={cn(
-                  "w-full text-left px-6 py-4 border-b border-industrial-800/60 transition-colors",
+                  "w-full text-left px-6 py-4 border-b border-border-card transition-colors",
                   "hover:bg-[#1F2937]/50",
                   active ? "bg-[#1F2937]/50" : "bg-transparent"
                 )}
@@ -792,9 +861,9 @@ const TrackingView = () => {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={cn(
                       "w-9 h-9 rounded-xl flex items-center justify-center border",
-                      active ? "border-siac-active/30 bg-industrial-950/50" : "border-white/5 bg-industrial-950/30"
+                      active ? "border-siac-accent/30 bg-industrial-950/50" : "border-white/5 bg-industrial-950/30"
                     )}>
-                      <div className={cn(active ? "text-siac-active" : "text-gray-400")}>
+                      <div className={cn(active ? "text-siac-accent" : "text-gray-400")}>
                         {renderAssetIcon(a.tipo)}
                       </div>
                     </div>
@@ -816,9 +885,9 @@ const TrackingView = () => {
       <div className="flex-1 overflow-y-auto p-8">
         {!selectedAsset ? (
           <div className="h-full flex items-center justify-center">
-            <div className="max-w-xl w-full bg-industrial-900 border border-industrial-800 rounded-2xl p-10 text-center">
+            <div className="max-w-xl w-full bg-industrial-900 border border-border-card rounded-2xl p-10 text-center">
               <div className="mx-auto w-14 h-14 rounded-2xl bg-industrial-950/50 border border-white/5 flex items-center justify-center">
-                <Locate className="w-7 h-7 text-siac-active" />
+                <Locate className="w-7 h-7 text-siac-accent" />
               </div>
               <div className="mt-6 space-y-2">
                 <div className="text-sm font-bold uppercase tracking-widest text-white">Seleccione un activo</div>
@@ -830,10 +899,10 @@ const TrackingView = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-              <div className="bg-[#1F2937] px-6 py-5 border-b border-industrial-800 flex items-center justify-between">
+            <div className="bg-industrial-900 border border-border-card rounded-2xl overflow-hidden">
+              <div className="bg-[#1F2937] px-6 py-5 border-b border-border-card flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-industrial-950/40 flex items-center justify-center text-siac-active">
+                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-industrial-950/40 flex items-center justify-center text-siac-accent">
                     {renderAssetIcon(selectedAsset.tipo)}
                   </div>
                   <div className="flex flex-col">
@@ -869,10 +938,10 @@ const TrackingView = () => {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 bg-industrial-900 border border-industrial-800 rounded-2xl overflow-hidden">
-                <div className="bg-[#1F2937] px-6 py-4 border-b border-industrial-800 flex items-center justify-between">
+              <div className="xl:col-span-2 bg-industrial-900 border border-border-card rounded-2xl overflow-hidden">
+                <div className="bg-[#1F2937] px-6 py-4 border-b border-border-card flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-siac-active animate-pulse" />
+                    <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
                     <span className="text-xs font-bold uppercase tracking-widest text-white">Timeline de Eventos</span>
                   </div>
                   <span className="text-[10px] font-mono text-gray-500 uppercase">{timeline.length} eventos</span>
@@ -880,7 +949,7 @@ const TrackingView = () => {
 
                 <div className="p-6">
                   <div className="relative">
-                    <div className="absolute left-[14px] top-0 bottom-0 w-px bg-industrial-800" />
+                    <div className="absolute left-[14px] top-0 bottom-0 w-px bg-border-card" />
                     <div className="space-y-6">
                       {timeline.map((evt: any) => {
                         const active = selectedEventId === evt.id;
@@ -1800,10 +1869,10 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
     <div className="min-h-screen bg-industrial-950 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background patterns */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-siac-armed/20 via-transparent to-transparent" />
-        <div className="grid grid-cols-12 h-full w-full border-siac-armed/5 border">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-siac-accent/20 via-transparent to-transparent" />
+        <div className="grid grid-cols-12 h-full w-full border-siac-accent/5 border">
           {Array.from({ length: 144 }).map((_, i) => (
-            <div key={i} className="border-siac-armed/5 border" />
+            <div key={i} className="border-siac-accent/5 border" />
           ))}
         </div>
       </div>
@@ -1815,7 +1884,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
       >
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-siac-green rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(0,255,157,0.4)]">
+            <div className="w-12 h-12 bg-siac-accent rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(77,196,147,0.35)]">
               <ShieldCheck className="text-industrial-950 w-8 h-8" />
             </div>
             <h1 className="text-4xl font-bold tracking-tighter text-white">SIAC</h1>
@@ -1823,21 +1892,23 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
           <div className="space-y-2 text-center md:text-left">
             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
               Sistema Inteligente <br />
-              <span className="text-siac-green">de Monitoreo</span>
+              <span className="text-siac-accent">de Monitoreo</span>
             </h2>
             <p className="text-gray-400 text-base md:text-lg max-w-sm mx-auto md:mx-0">
               Arquitectura de seguridad avanzada para activos industriales críticos.
             </p>
           </div>
           <div className="flex flex-col md:flex-row items-center gap-4 justify-center md:justify-start">
-            <div className="bg-industrial-900 border border-industrial-700 p-4 rounded-xl w-full md:w-auto text-center md:text-left">
-              <div className="text-3xl font-mono text-siac-green">20,347</div>
+            <div className="bg-industrial-900 border border-border-card p-4 rounded-xl w-full md:w-auto text-center md:text-left">
+              <div className="text-3xl font-mono text-siac-accent">
+                <AnimatedInt value={20347} durationMs={1200} format={(v) => v.toLocaleString('en-US')} />
+              </div>
               <div className="text-xs uppercase tracking-widest text-gray-500">Monitoreos activos</div>
             </div>
-            <div className="hidden md:block w-px h-12 bg-industrial-700" />
+            <div className="hidden md:block w-px h-12 bg-white/10" />
             <div className="flex -space-x-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-industrial-950 bg-industrial-800 flex items-center justify-center text-[10px] font-bold">
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-industrial-950 bg-industrial-900 flex items-center justify-center text-[10px] font-bold">
                   U{i}
                 </div>
               ))}
@@ -1846,12 +1917,12 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
         </div>
 
         <motion.div 
-          className="bg-industrial-900 border border-industrial-700 p-8 rounded-2xl shadow-2xl relative group"
-          whileHover={{ borderColor: 'rgba(0,255,157,0.3)' }}
+          className="bg-industrial-900 border border-border-card p-8 rounded-2xl shadow-2xl relative group"
+          whileHover={{ borderColor: 'rgba(77,196,147,0.35)' }}
         >
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-siac-green/5 blur-3xl rounded-full" />
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-siac-accent/5 blur-3xl rounded-full" />
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-            Bienvenido <div className="w-2 h-2 rounded-full bg-siac-green animate-pulse" />
+            Bienvenido <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
           </h3>
           <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
             <div className="space-y-1">
@@ -1861,7 +1932,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
                 <input 
                   type="text" 
                   defaultValue="admin@siac.mx"
-                  className="w-full bg-industrial-800 border border-industrial-700 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green transition-colors" 
+                  className="w-full bg-industrial-950/30 border border-border-card rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-colors" 
                 />
               </div>
             </div>
@@ -1872,18 +1943,18 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
                 <input 
                   type="password" 
                   defaultValue="password"
-                  className="w-full bg-industrial-800 border border-industrial-700 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green transition-colors" 
+                  className="w-full bg-industrial-950/30 border border-border-card rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-colors" 
                 />
               </div>
             </div>
             <button 
               type="submit"
-              className="w-full bg-siac-green text-industrial-950 font-bold py-3 rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 group mt-4"
+              className="w-full bg-siac-accent text-industrial-950 font-bold py-3 rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 group mt-4"
             >
               Ingresar <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
-          <div className="mt-6 pt-6 border-t border-industrial-800 flex justify-between items-center text-[10px] text-gray-600 font-mono">
+          <div className="mt-6 pt-6 border-t border-border-card flex justify-between items-center text-[10px] text-gray-600 font-mono">
             <span>SIAC CORE V2.4.0</span>
             <span>IP: 192.168.1.104</span>
           </div>
@@ -1895,32 +1966,46 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
 
 const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick: () => void }) => {
   const Icon = kpi.icon;
+  const hex = tokenToHex((kpi as any).color);
+  const spark = buildSparkline(((kpi as any).data || []) as number[], 40, 24);
   return (
     <motion.div 
       whileHover={{ y: -4 }}
       onClick={onClick}
       className={cn(
-        "bg-industrial-900 border border-white/10 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
-        active ? "ring-1 ring-siac-armed/50 border-siac-armed/50" : "hover:border-white/20"
+        "bg-industrial-900 border border-border-card border-t-2 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden group",
+        active ? "ring-1 ring-siac-accent/35 border-siac-accent/25" : "hover:border-white/15"
       )}
+      style={{ borderTopColor: hex }}
     >
       <div className="flex items-center gap-4">
         <div className={cn(
           "p-3 rounded-full flex items-center justify-center shrink-0 transition-colors",
-          kpi.status === 'ALERTA' ? "bg-siac-blocked/10 text-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed/10 text-siac-disarmed" : "bg-siac-armed/10 text-siac-armed"
+          kpi.status === 'ALERTA' ? "bg-siac-blocked/10 text-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed/10 text-siac-disarmed" : "bg-siac-accent/10 text-siac-accent"
         )}>
           <Icon className="w-6 h-6" />
         </div>
-        <div className="flex flex-col min-w-0">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-white">{kpi.value}</span>
-            <span className="text-xs text-gray-500 font-medium">/ {kpi.total}</span>
+        <div className="flex flex-col min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-baseline gap-1">
+              <AnimatedInt value={kpi.value} durationMs={800} className="text-2xl font-bold text-white" />
+              <span className="text-xs text-gray-500 font-medium">/</span>
+              <AnimatedInt value={kpi.total} durationMs={800} className="text-xs text-gray-500 font-medium" />
+            </div>
+            <svg width="40" height="24" viewBox="0 0 40 24" className="shrink-0 opacity-90">
+              {spark.area && (
+                <polygon points={spark.area} fill={hexToRgba(hex, 0.10)} />
+              )}
+              {spark.line && (
+                <polyline points={spark.line} fill="none" stroke={hex} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              )}
+            </svg>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 truncate">{kpi.label}</span>
             <div className={cn(
               "w-1.5 h-1.5 rounded-full",
-              kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
+              kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-accent"
             )} />
           </div>
         </div>
@@ -1933,7 +2018,7 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
           animate={{ width: `${(kpi.value / kpi.total) * 100}%` }}
           className={cn(
             "h-full transition-colors duration-500",
-            kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-armed"
+            kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-accent"
           )}
         />
       </div>
@@ -1995,7 +2080,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1F2937] border border-siac-active p-2 rounded shadow-2xl">
+        <div className="bg-[#1F2937] border border-siac-accent p-2 rounded shadow-2xl">
           <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2">
@@ -2022,11 +2107,11 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
         <div className="flex-1 min-w-[240px]">
           <div className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">Instalación</div>
           <div className="relative">
-            <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-siac-green" />
+            <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-siac-accent" />
             <select 
               value={selectedInstallation}
               onChange={(e) => handleInstallationChange(e.target.value)}
-              className="w-full bg-[#283046] border border-white/10 rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-siac-green transition-all appearance-none text-white font-bold"
+              className="w-full bg-industrial-900 border border-border-card rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-siac-accent/50 transition-all appearance-none text-white font-bold"
             >
               <option value="Parque Solar Don Humberto">Parque Solar Don Humberto</option>
               <option value="Planta Norte">Planta Norte</option>
@@ -2039,11 +2124,11 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
         <div className="flex-1 min-w-[240px]">
           <div className="text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">Búsqueda por fecha</div>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-siac-green" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-siac-accent" />
             <input 
               type="text" 
               defaultValue="25-04-2026"
-              className="w-full bg-[#283046] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-green transition-all font-mono text-white"
+              className="w-full bg-industrial-900 border border-border-card rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-all font-mono text-white"
             />
           </div>
         </div>
@@ -2052,7 +2137,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
           <button 
             onClick={handleSearch}
             disabled={isSearching}
-            className="bg-siac-active hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center shadow-[0_0_15px_rgba(77,196,147,0.2)]"
+            className="bg-siac-accent hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center shadow-[0_0_15px_rgba(77,196,147,0.2)]"
           >
             {isSearching ? (
               <>
@@ -2078,8 +2163,8 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             exit={{ opacity: 0 }}
             className="h-[600px] flex flex-col items-center justify-center gap-4 bg-industrial-900/50 rounded-2xl border border-white/5"
           >
-            <div className="w-12 h-12 border-4 border-siac-green border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-bold text-siac-green uppercase tracking-[0.2em]">Re-configurando entorno...</span>
+            <div className="w-12 h-12 border-4 border-siac-accent border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold text-siac-accent uppercase tracking-[0.2em]">Re-configurando entorno...</span>
           </motion.div>
         ) : (
           <motion.div 
@@ -2092,7 +2177,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
             <div className="bg-industrial-900 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
               <div className="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-siac-green" />
+                  <FileText className="w-4 h-4 text-siac-accent" />
                   <span className="text-sm font-bold uppercase tracking-widest">Reporte Operativo: {selectedInstallation}</span>
                 </div>
                 <div className="text-[10px] font-mono text-gray-500">REF: SIAC-REP-2026-0425</div>
@@ -2102,15 +2187,15 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                 {/* Equipamiento Donuts */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                    <div className="w-1 h-3 bg-siac-green rounded-full" />
+                    <div className="w-1 h-3 bg-siac-accent rounded-full" />
                     Estado de Equipamiento
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {donutData.map((data, idx) => (
                       <motion.div 
                         key={idx} 
-                        whileHover={{ scale: 1.02, borderColor: 'rgba(11,152,106,0.3)' }}
-                        className="bg-industrial-950/50 border border-white/5 rounded-xl p-6 flex flex-col items-center group transition-all shadow-lg hover:shadow-siac-green/5"
+                        whileHover={{ scale: 1.02, borderColor: 'rgba(77,196,147,0.3)' }}
+                        className="bg-industrial-950/50 border border-white/5 rounded-xl p-6 flex flex-col items-center group transition-all shadow-lg hover:shadow-siac-accent/5"
                       >
                         <span className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-wider">{data.title}</span>
                         <div className="w-32 h-32 relative">
@@ -2673,8 +2758,20 @@ const Dashboard = () => {
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(() => Date.now());
+  const [hoveredPinId, setHoveredPinId] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [toasts, setToasts] = useState<any[]>([]);
+  const [kpis, setKpis] = useState<any[]>(() => ([
+    { id: 'Cámara', label: 'Cámaras', icon: Camera, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed', data: [8, 10, 9, 11, 10, 12, 12, 11] },
+    { id: 'Infrarrojo', label: 'Infrarrojos', icon: Thermometer, value: 9, total: 12, status: 'ALERTA', color: 'siac-blocked', data: [11, 10, 10, 9, 10, 9, 9, 9] },
+    { id: 'PIR', label: 'PIR', icon: Radio, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed', data: [10, 11, 10, 12, 12, 12, 12, 12] },
+    { id: 'GW', label: 'GW', icon: Cpu, value: 11, total: 11, status: 'OK', color: 'siac-accent', data: [9, 10, 11, 11, 10, 11, 11, 11] },
+    { id: 'Activo', label: 'Activos', icon: Activity, value: 13, total: 13, status: 'OK', color: 'siac-accent', data: [11, 12, 12, 13, 13, 13, 13, 13] },
+  ]));
 
   useEffect(() => {
+    if (isDemoMode) return;
     const interval = setInterval(() => {
       setAlarms(prev => {
         const newAlarms = [...prev];
@@ -2691,10 +2788,45 @@ const Dashboard = () => {
         ...p,
         estado: Math.random() > 0.8 ? (['Apagado', 'Armado', 'Des-armado', 'Alarmado', 'Bloqueado'][Math.floor(Math.random() * 5)] as any) : p.estado
       })));
+      setLastUpdatedAt(Date.now());
     }, 8000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isDemoMode]);
+
+  useEffect(() => {
+    if (!isDemoMode) return;
+    const nextEstado = (estado: Pin['estado']) => (estado === 'Armado' ? 'Alarmado' : estado === 'Alarmado' ? 'Bloqueado' : 'Armado');
+
+    const interval = setInterval(() => {
+      setPins((prev) => {
+        if (!prev.length) return prev;
+        const idx = Math.floor(Math.random() * prev.length);
+        const current = prev[idx];
+        const next = nextEstado(current.estado);
+        const updated = [...prev];
+        updated[idx] = { ...current, estado: next };
+
+        const toastId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const color = next === 'Bloqueado' ? '#F51E1E' : next === 'Alarmado' ? '#FAD92A' : '#0B986A';
+        setToasts((t) => [{ id: toastId, title: 'Evento Simulado', message: `${current.nombre} → ${next.toUpperCase()}`, color }, ...t].slice(0, 4));
+        setTimeout(() => setToasts((t) => t.filter((x: any) => x.id !== toastId)), 3200);
+
+        setLastUpdatedAt(Date.now());
+        return updated;
+      });
+
+      setKpis((prev) => prev.map((k: any) => {
+        const max = Number(k.total) || 0;
+        const delta = Math.random() > 0.65 ? 1 : 0;
+        const nextVal = Math.max(0, Math.min(max, (Number(k.value) || 0) + (Math.random() > 0.5 ? delta : -delta)));
+        const nextData = Array.isArray(k.data) ? [...k.data, nextVal].slice(-12) : [nextVal];
+        return { ...k, value: nextVal, data: nextData };
+      }));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isDemoMode]);
 
   const filteredAlarms = useMemo(() => {
     if (!alarms) return [];
@@ -2702,16 +2834,67 @@ const Dashboard = () => {
     return alarms.filter(a => a.tipo === activeFilter);
   }, [alarms, activeFilter]);
 
-  const kpis: KPI[] = [
-    { id: 'Cámara', label: 'Cámaras', icon: Camera, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed' },
-    { id: 'Infrarrojo', label: 'Infrarrojos', icon: Thermometer, value: 9, total: 12, status: 'ALERTA', color: 'siac-blocked' },
-    { id: 'PIR', label: 'PIR', icon: Radio, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed' },
-    { id: 'GW', label: 'GW', icon: Cpu, value: 11, total: 11, status: 'OK', color: 'siac-armed' },
-    { id: 'Activo', label: 'Activos', icon: Activity, value: 13, total: 13, status: 'OK', color: 'siac-armed' },
-  ];
+  const LiveIndicator = () => {
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+      const t = setInterval(() => setNow(Date.now()), 1000);
+      return () => clearInterval(t);
+    }, []);
+    const seconds = Math.max(0, Math.floor((now - lastUpdatedAt) / 1000));
+    return (
+      <div className="relative group flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
+        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+          En vivo · Actualizado hace {seconds}s
+        </span>
+        <div className="absolute left-0 top-full mt-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
+          <div className="bg-[#1F2937] border border-border-card rounded-lg px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-gray-300 shadow-2xl">
+            Datos actualizando en tiempo real
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-industrial-950 text-white overflow-hidden relative">
+      <div className="fixed top-4 right-4 z-[70] flex flex-col gap-3 pointer-events-none">
+        <AnimatePresence>
+          {toasts.map((t: any) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="pointer-events-auto"
+            >
+              <div className="bg-industrial-900/85 backdrop-blur-md border border-border-card rounded-xl shadow-2xl overflow-hidden">
+                <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: `3px solid ${t.color}` }}>
+                  <div className="flex-1">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.title}</div>
+                    <div className="mt-0.5 text-xs font-bold text-white">{t.message}</div>
+                  </div>
+                  <div className="w-2 h-2 rounded-full mt-1.5" style={{ background: t.color }} />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <button
+        onClick={() => setIsDemoMode((v) => !v)}
+        className={cn(
+          "fixed bottom-5 right-5 z-[65] px-4 py-3 rounded-full border font-bold uppercase tracking-widest text-[10px] shadow-2xl transition-all",
+          isDemoMode
+            ? "bg-siac-blocked/10 border-siac-blocked/30 text-siac-blocked hover:border-siac-blocked/50"
+            : "bg-siac-accent/10 border-siac-accent/30 text-siac-accent hover:border-siac-accent/50"
+        )}
+      >
+        {isDemoMode ? "■ Stop Demo" : "▶ Demo"}
+      </button>
+
       {/* Sidebar Overlay (Mobile) */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -2732,7 +2915,7 @@ const Dashboard = () => {
       )}>
         <div className="p-6 flex items-center justify-between border-b border-industrial-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-siac-green rounded flex items-center justify-center">
+            <div className="w-8 h-8 bg-siac-accent rounded flex items-center justify-center">
               <ShieldCheck className="text-industrial-950 w-5 h-5" />
             </div>
             <span className="text-xl font-bold tracking-tighter">SIAC</span>
@@ -2749,65 +2932,114 @@ const Dashboard = () => {
           <button 
             onClick={() => { setCurrentView('dashboard'); setIsSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all",
-              currentView === 'dashboard' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all relative overflow-hidden",
+              currentView === 'dashboard' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'dashboard' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <LayoutDashboard className="w-5 h-5" /> Dashboard
           </button>
           <button 
             onClick={() => { setCurrentView('mapa'); setIsSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
-              currentView === 'mapa' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'mapa' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'mapa' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <MapIcon className="w-5 h-5" /> Mapa
           </button>
           <button 
             onClick={() => { setCurrentView('alarmas'); setIsSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative",
-              currentView === 'alarmas' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'alarmas' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'alarmas' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <Bell className="w-5 h-5" /> Alarmas
             <span className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 bg-siac-blocked text-white text-[10px] flex items-center justify-center rounded-full font-bold">7</span>
           </button>
           <button 
             onClick={() => setCurrentView('reportes')}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
-              currentView === 'reportes' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'reportes' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'reportes' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <FileText className="w-5 h-5" /> Reportes
           </button>
           <button 
             onClick={() => { setCurrentView('seguimiento'); setIsSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
-              currentView === 'seguimiento' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'seguimiento' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'seguimiento' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <Activity className="w-5 h-5" /> Seguimiento
           </button>
           <button 
             onClick={() => { setCurrentView('Usuarios'); setIsSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
-              currentView === 'Usuarios' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'Usuarios' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'Usuarios' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <Users className="w-5 h-5" /> Usuarios
           </button>
           <button 
             onClick={() => { setCurrentView('Configuración'); setIsSidebarOpen(false); }}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
-              currentView === 'Configuración' ? "bg-siac-green/10 text-siac-green" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'Configuración' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
             )}
           >
+            {currentView === 'Configuración' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
             <Settings className="w-5 h-5" /> Configuración
           </button>
         </nav>
@@ -2850,11 +3082,11 @@ const Dashboard = () => {
               >
                 <MapIcon className={cn(
                   "w-3 h-3 transition-colors",
-                  currentView === 'mapa' ? "text-siac-green" : "text-gray-500 group-hover:text-siac-green"
+                  currentView === 'mapa' ? "text-siac-accent" : "text-gray-500 group-hover:text-siac-accent"
                 )} />
                 <span className={cn(
                   "transition-colors",
-                  currentView === 'mapa' ? "text-siac-green" : "text-white hover:text-siac-green"
+                  currentView === 'mapa' ? "text-siac-accent" : "text-white hover:text-siac-accent"
                 )}
                 >
                   Mapa
@@ -2867,11 +3099,11 @@ const Dashboard = () => {
               >
                 <FileText className={cn(
                   "w-3 h-3 transition-colors",
-                  currentView === 'reportes' ? "text-siac-green" : "text-gray-500 group-hover:text-siac-green"
+                  currentView === 'reportes' ? "text-siac-accent" : "text-gray-500 group-hover:text-siac-accent"
                 )} />
                 <span className={cn(
                   "transition-colors",
-                  currentView === 'reportes' ? "text-siac-green" : "text-white hover:text-siac-green"
+                  currentView === 'reportes' ? "text-siac-accent" : "text-white hover:text-siac-accent"
                 )}
                 >
                   Reportes
@@ -2880,7 +3112,7 @@ const Dashboard = () => {
               {currentView === 'alarmas' && (
                 <>
                   <ChevronRight className="w-3 h-3 text-gray-700" />
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-accent">
                     <Bell className="w-3 h-3" />
                     <span>Alarmas</span>
                   </div>
@@ -2889,7 +3121,7 @@ const Dashboard = () => {
               {currentView === 'seguimiento' && (
                 <>
                   <ChevronRight className="w-3 h-3 text-gray-700" />
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-accent">
                     <History className="w-3 h-3" />
                     <span>Seguimiento</span>
                   </div>
@@ -2898,7 +3130,7 @@ const Dashboard = () => {
               {currentView === 'Usuarios' && (
                 <>
                   <ChevronRight className="w-3 h-3 text-gray-700" />
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-accent">
                     <Users className="w-3 h-3" />
                     <span>Usuarios</span>
                   </div>
@@ -2907,13 +3139,14 @@ const Dashboard = () => {
               {currentView === 'Configuración' && (
                 <>
                   <ChevronRight className="w-3 h-3 text-gray-700" />
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-green">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-accent">
                     <Settings className="w-3 h-3" />
                     <span>Configuración</span>
                   </div>
                 </>
               )}
             </div>
+            <LiveIndicator />
           </div>
 
           {/* Center Navigation Icons */}
@@ -2922,7 +3155,7 @@ const Dashboard = () => {
               onClick={() => setCurrentView('dashboard')}
               className={cn(
                 "transition-all",
-                currentView === 'dashboard' ? "text-siac-green" : "text-gray-500 hover:text-white"
+                currentView === 'dashboard' ? "text-siac-accent" : "text-gray-500 hover:text-white"
               )}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -2931,7 +3164,7 @@ const Dashboard = () => {
               onClick={() => setCurrentView('alarmas')}
               className={cn(
                 "transition-all",
-                currentView === 'alarmas' ? "text-siac-green" : "text-gray-500 hover:text-white"
+                currentView === 'alarmas' ? "text-siac-accent" : "text-gray-500 hover:text-white"
               )}
             >
               <Bell className="w-4 h-4" />
@@ -2941,7 +3174,7 @@ const Dashboard = () => {
               onClick={() => setCurrentView('mapa')}
               className={cn(
                 "transition-all",
-                currentView === 'mapa' ? "text-siac-green" : "text-gray-500 hover:text-white"
+                currentView === 'mapa' ? "text-siac-accent" : "text-gray-500 hover:text-white"
               )}
             >
               <MapIcon className="w-4 h-4" />
@@ -2951,7 +3184,7 @@ const Dashboard = () => {
               onClick={() => setCurrentView('reportes')}
               className={cn(
                 "transition-all",
-                currentView === 'reportes' ? "text-siac-green" : "text-gray-500 hover:text-white"
+                currentView === 'reportes' ? "text-siac-accent" : "text-gray-500 hover:text-white"
               )}
             >
               <FileText className="w-4 h-4" />
@@ -2960,7 +3193,7 @@ const Dashboard = () => {
               onClick={() => setCurrentView('seguimiento')}
               className={cn(
                 "transition-all",
-                currentView === 'seguimiento' ? "text-siac-green" : "text-gray-500 hover:text-white"
+                currentView === 'seguimiento' ? "text-siac-accent" : "text-gray-500 hover:text-white"
               )}
             >
               <Clock className="w-4 h-4" />
@@ -2969,7 +3202,7 @@ const Dashboard = () => {
               onClick={() => setCurrentView('Configuración')}
               className={cn(
                 "transition-all",
-                currentView === 'Configuración' ? "text-siac-green" : "text-gray-500 hover:text-white"
+                currentView === 'Configuración' ? "text-siac-accent" : "text-gray-500 hover:text-white"
               )}
             >
               <Settings className="w-4 h-4" />
@@ -2989,7 +3222,7 @@ const Dashboard = () => {
                   onClick={() => setCurrentView('alarmas')}
                   className={cn(
                     "p-2 transition-colors bg-industrial-800/50 rounded-lg border border-white/5",
-                    currentView === 'alarmas' ? "text-siac-green border-siac-green/30" : "text-gray-400 group-hover:text-white"
+                    currentView === 'alarmas' ? "text-siac-accent border-siac-accent/30" : "text-gray-400 group-hover:text-white"
                   )}
                 >
                   <Bell className="w-4 h-4" />
@@ -3006,7 +3239,7 @@ const Dashboard = () => {
                 <div className="text-xs font-bold text-white leading-none">Administrador</div>
                 <div className="text-[10px] text-gray-500 font-medium">Soporte Técnico</div>
               </div>
-              <div className="w-9 h-9 rounded-full border-2 border-siac-green p-0.5 overflow-hidden">
+              <div className="w-9 h-9 rounded-full border-2 border-siac-accent p-0.5 overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" 
                   alt="Profile" 
@@ -3038,7 +3271,7 @@ const Dashboard = () => {
                 <div className="xl:col-span-2 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                      <MapIcon className="w-5 h-5 text-siac-green" /> Mapa de Instalaciones
+                      <MapIcon className="w-5 h-5 text-siac-accent" /> Mapa de Instalaciones
                     </h3>
                     <button className="p-2 hover:bg-industrial-800 rounded-lg transition-colors text-gray-500 hover:text-white">
                       <Maximize2 className="w-5 h-5" />
@@ -3076,32 +3309,54 @@ const Dashboard = () => {
                         <motion.div
                           key={pin.id}
                           initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
+                          animate={{ scale: (pin.estado === 'Alarmado' || pin.estado === 'Bloqueado') ? 1.35 : 1, opacity: 1 }}
                           className="absolute -translate-x-1/2 -translate-y-full cursor-pointer z-10 group"
                           style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                          onMouseEnter={() => setHoveredPinId(pin.id)}
+                          onMouseLeave={() => setHoveredPinId((prev) => (prev === pin.id ? null : prev))}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedPin(pin);
                           }}
                         >
                           {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-industrial-950 border border-white/10 rounded text-[10px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                            {pin.id || 'N/A'}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                            <div className="bg-industrial-900/90 backdrop-blur-md border border-border-card rounded-xl px-3 py-2 shadow-2xl w-max">
+                              <div className="flex items-center gap-2">
+                                <div className="text-[10px] font-bold text-white">{pin.nombre || pin.id || 'N/A'}</div>
+                                <span className={cn(
+                                  "px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-widest border",
+                                  pin.estado === 'Armado'
+                                    ? "bg-siac-armed/10 text-siac-armed border-siac-armed/30"
+                                    : pin.estado === 'Alarmado'
+                                    ? "bg-siac-alarmed/10 text-siac-alarmed border-siac-alarmed/30"
+                                    : pin.estado === 'Bloqueado'
+                                    ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/30"
+                                    : pin.estado === 'Des-armado'
+                                    ? "bg-siac-disarmed/10 text-siac-disarmed border-siac-disarmed/30"
+                                    : "bg-siac-off/10 text-siac-off border-siac-off/30"
+                                )}>
+                                  {pin.estado}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                                Últ. actualización: {new Date(lastUpdatedAt).toLocaleTimeString('en-US', { hour12: false })}
+                              </div>
+                            </div>
                           </div>
 
                           <div className="relative">
-                            {/* Status Ping Animation for Active/Alarmed states */}
-                            {(pin.estado === 'Alarmado' || pin.estado === 'Armado') && (
+                            {(pin.estado === 'Alarmado' || pin.estado === 'Bloqueado') && (
                               <div className={cn(
-                                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full animate-ping opacity-20",
-                                pin.estado === 'Alarmado' ? "bg-siac-alarmed" : "bg-siac-armed"
+                                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full animate-pulse",
+                                pin.estado === 'Alarmado' ? "ring-2 ring-siac-alarmed/60 bg-siac-alarmed/5" : "ring-2 ring-siac-blocked/60 bg-siac-blocked/5"
                               )} />
                             )}
 
                             {/* PIN SHAPE (Gota) */}
                             <div className={cn(
                               "relative w-8 h-10 transition-all duration-300 transform drop-shadow-lg",
-                              selectedPin?.id === pin.id ? "scale-125 -translate-y-1" : "hover:scale-110 hover:-translate-y-1"
+                              selectedPin?.id === pin.id ? "-translate-y-1" : "group-hover:-translate-y-1"
                             )}>
                               <svg viewBox="0 0 24 30" className="w-full h-full drop-shadow-md">
                                 <path 
@@ -3110,7 +3365,7 @@ const Dashboard = () => {
                                     "transition-colors duration-300",
                                     pin.estado === 'Apagado' ? "fill-siac-off" :
                                     pin.estado === 'Armado' ? "fill-siac-armed" :
-                                    pin.estado === 'Activo' ? "fill-siac-active" :
+                                    pin.estado === 'Activo' ? "fill-siac-accent" :
                                     pin.estado === 'Des-armado' ? "fill-siac-disarmed" :
                                     pin.estado === 'Alarmado' ? "fill-siac-alarmed" :
                                     "fill-siac-blocked"
@@ -3136,14 +3391,14 @@ const Dashboard = () => {
                     {/* Map Legend */}
                     <div className="hidden sm:block absolute bottom-4 left-4 bg-industrial-950/90 backdrop-blur-md p-3 md:p-4 rounded-xl border border-white/5 shadow-2xl z-20">
                       <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <div className="w-1 h-3 bg-siac-armed rounded-full" />
+                        <div className="w-1 h-3 bg-siac-accent rounded-full" />
                         LEYENDA
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                         {[
                           { label: 'Apagado', color: 'bg-siac-off' },
                           { label: 'Armado', color: 'bg-siac-armed' },
-                          { label: 'Activo', color: 'bg-siac-active' },
+                          { label: 'Activo', color: 'bg-siac-accent' },
                           { label: 'Desarmado', color: 'bg-siac-disarmed' },
                           { label: 'Alarmado', color: 'bg-siac-alarmed' },
                           { label: 'Bloqueado', color: 'bg-siac-blocked' },
@@ -3182,7 +3437,7 @@ const Dashboard = () => {
                           {/* CCTV Header */}
                           <div className="p-4 border-b border-white/5 flex items-center justify-between bg-industrial-950/50">
                             <div className="flex items-center gap-3">
-                              <div className="w-2 h-2 rounded-full bg-siac-blocked animate-pulse" />
+                              <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
                               <span className="text-xs font-bold uppercase tracking-widest text-gray-200">LIVE: {selectedPin.nombre}</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -3206,10 +3461,10 @@ const Dashboard = () => {
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/scan-lines.png')] opacity-30 pointer-events-none" />
                             
                             {/* CCTV HUD */}
-                            <div className="absolute top-4 left-4 text-[10px] font-mono text-siac-armed/80">
+                            <div className="absolute top-4 left-4 text-[10px] font-mono text-siac-accent/80">
                               REC ● 24-04-2026 16:32:11
                             </div>
-                            <div className="absolute bottom-4 right-4 text-[10px] font-mono text-siac-armed/80">
+                            <div className="absolute bottom-4 right-4 text-[10px] font-mono text-siac-accent/80">
                               CAM_SEC_0{selectedPin.id.slice(-1)}
                             </div>
 
@@ -3230,7 +3485,15 @@ const Dashboard = () => {
                               <span className="text-[8px] text-gray-500 uppercase font-bold">Estado</span>
                               <div className={cn(
                                 "text-[10px] font-bold",
-                                selectedPin.estado === 'Alarmado' ? "text-siac-blocked" : "text-siac-armed"
+                                selectedPin.estado === 'Alarmado'
+                                  ? "text-siac-alarmed"
+                                  : selectedPin.estado === 'Bloqueado'
+                                  ? "text-siac-blocked"
+                                  : selectedPin.estado === 'Des-armado'
+                                  ? "text-siac-disarmed"
+                                  : selectedPin.estado === 'Apagado'
+                                  ? "text-siac-off"
+                                  : "text-siac-armed"
                               )}>{selectedPin.estado.toUpperCase()}</div>
                             </div>
                             <div className="space-y-1">
@@ -3238,7 +3501,7 @@ const Dashboard = () => {
                               <div className="text-[10px] font-bold text-gray-200">{selectedPin.tipo.toUpperCase()}</div>
                             </div>
                             <div className="flex items-end justify-end">
-                              <button className="px-3 py-1.5 bg-siac-armed text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all">
+                              <button className="px-3 py-1.5 bg-siac-accent text-industrial-950 text-[10px] font-bold rounded-lg hover:brightness-110 transition-all">
                                 PROTOCOLO
                               </button>
                             </div>
@@ -3252,7 +3515,7 @@ const Dashboard = () => {
                 {/* Installation Status */}
                 <div className="space-y-4">
                   <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                    <Cpu className="w-5 h-5 text-siac-green" /> Instalaciones
+                    <Cpu className="w-5 h-5 text-siac-accent" /> Instalaciones
                   </h3>
                   <div className="bg-industrial-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
                     <div className="p-4 border-b border-white/5 bg-industrial-800/30">
@@ -3268,8 +3531,12 @@ const Dashboard = () => {
                           <div className="flex justify-center">
                             <div className={cn(
                               "px-2 py-0.5 rounded text-[10px] font-bold border",
-                              (pin.estado === 'Alarmado' || pin.estado === 'Bloqueado')
-                                ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/20" 
+                              pin.estado === 'Alarmado'
+                                ? "bg-siac-alarmed/10 text-siac-alarmed border-siac-alarmed/20"
+                                : pin.estado === 'Bloqueado'
+                                ? "bg-siac-blocked/10 text-siac-blocked border-siac-blocked/20"
+                                : pin.estado === 'Des-armado'
+                                ? "bg-siac-disarmed/10 text-siac-disarmed border-siac-disarmed/20"
                                 : pin.estado === 'Apagado'
                                 ? "bg-siac-off/10 text-siac-off border-siac-off/20"
                                 : "bg-siac-armed/10 text-siac-armed border-siac-armed/20"

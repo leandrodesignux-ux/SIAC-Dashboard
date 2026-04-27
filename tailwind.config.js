@@ -9,14 +9,16 @@ export default {
       colors: {
         industrial: {
           950: '#161D31',
-          900: '#283046',
+          900: '#1E2A42',
           800: '#121212',
           700: '#1a1a1a',
           600: '#262626',
         },
+        'border-card': 'rgba(255,255,255,0.07)',
         siac: {
           armed: '#0B986A',
           active: '#4DC493',
+          accent: '#4DC493',
           disarmed: '#D89A1E',
           alarmed: '#FAD92A',
           blocked: '#F51E1E',
@@ -25,7 +27,6 @@ export default {
           green: '#0B986A',
           red: '#F51E1E',
           orange: '#D89A1E',
-          blue: '#4DC493',
         }
       },
       animation: {

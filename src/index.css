@@ -2,14 +2,16 @@
 
 @theme {
   --color-industrial-950: #161D31;
-  --color-industrial-900: #283046;
+  --color-industrial-900: #1E2A42;
   --color-industrial-800: #121212;
   --color-industrial-700: #1a1a1a;
   --color-industrial-600: #262626;
   --color-industrial-500: #404040;
+  --color-border-card: rgba(255,255,255,0.07);
   
   --color-siac-armed: #0B986A;
   --color-siac-active: #4DC493;
+  --color-siac-accent: #4DC493;
   --color-siac-disarmed: #D89A1E;
   --color-siac-alarmed: #FAD92A;
   --color-siac-blocked: #F51E1E;
@@ -19,7 +21,6 @@
   --color-siac-green: #0B986A;
   --color-siac-red: #F51E1E;
   --color-siac-orange: #D89A1E;
-  --color-siac-blue: #4DC493;
   
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
