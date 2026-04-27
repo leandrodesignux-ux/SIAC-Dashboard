@@ -53,7 +53,9 @@ import {
   Globe,
   Shield,
   Palette,
-  RefreshCw
+  RefreshCw,
+  Play,
+  Square
 } from 'lucide-react';
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -1611,8 +1613,8 @@ const SettingsView = () => {
 
               <div className="p-6 space-y-5">
                 <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
                       <div className="text-xs font-bold uppercase tracking-widest text-white">Sensibilidad de Sensores</div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Detección / ruido de señal</div>
                     </div>
@@ -1634,8 +1636,8 @@ const SettingsView = () => {
                 </div>
 
                 <div className="bg-industrial-950/30 border border-white/5 rounded-2xl p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
                       <div className="text-xs font-bold uppercase tracking-widest text-white">Tiempo de Timeout</div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Reintento / heartbeat</div>
                     </div>
@@ -2771,6 +2773,10 @@ const Dashboard = () => {
   ]));
 
   useEffect(() => {
+    setLastUpdatedAt(Date.now());
+  }, [isDemoMode]);
+
+  useEffect(() => {
     if (isDemoMode) return;
     const interval = setInterval(() => {
       setAlarms(prev => {
@@ -2807,24 +2813,32 @@ const Dashboard = () => {
         const updated = [...prev];
         updated[idx] = { ...current, estado: next };
 
-        const toastId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        const color = next === 'Bloqueado' ? '#F51E1E' : next === 'Alarmado' ? '#FAD92A' : '#0B986A';
-        setToasts((t) => [{ id: toastId, title: 'Evento Simulado', message: `${current.nombre} → ${next.toUpperCase()}`, color }, ...t].slice(0, 4));
-        setTimeout(() => setToasts((t) => t.filter((x: any) => x.id !== toastId)), 3200);
+        if (next === 'Bloqueado' || next === 'Alarmado') {
+          const toastId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          const color = next === 'Bloqueado' ? '#F51E1E' : '#FAD92A';
+          setToasts((t) => [{ id: toastId, title: 'Evento Simulado', message: `${current.nombre} → ${next.toUpperCase()}`, color }, ...t].slice(0, 4));
+          setTimeout(() => setToasts((t) => t.filter((x: any) => x.id !== toastId)), 3200);
+        }
 
         setLastUpdatedAt(Date.now());
         return updated;
       });
+    }, 5000);
 
+    return () => clearInterval(interval);
+  }, [isDemoMode]);
+
+  useEffect(() => {
+    if (!isDemoMode) return;
+    const interval = setInterval(() => {
       setKpis((prev) => prev.map((k: any) => {
         const max = Number(k.total) || 0;
-        const delta = Math.random() > 0.65 ? 1 : 0;
+        const delta = 1;
         const nextVal = Math.max(0, Math.min(max, (Number(k.value) || 0) + (Math.random() > 0.5 ? delta : -delta)));
         const nextData = Array.isArray(k.data) ? [...k.data, nextVal].slice(-12) : [nextVal];
         return { ...k, value: nextVal, data: nextData };
       }));
-    }, 3000);
-
+    }, 1200);
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
@@ -2843,7 +2857,7 @@ const Dashboard = () => {
     const seconds = Math.max(0, Math.floor((now - lastUpdatedAt) / 1000));
     return (
       <div className="relative group flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-siac-armed animate-pulse" />
         <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
           En vivo · Actualizado hace {seconds}s
         </span>
@@ -2886,13 +2900,14 @@ const Dashboard = () => {
       <button
         onClick={() => setIsDemoMode((v) => !v)}
         className={cn(
-          "fixed bottom-5 right-5 z-[65] px-4 py-3 rounded-full border font-bold uppercase tracking-widest text-[10px] shadow-2xl transition-all",
+          "fixed bottom-5 right-5 z-[65] px-5 py-3 rounded-full border font-bold uppercase tracking-widest text-[10px] shadow-2xl transition-all flex items-center gap-2",
           isDemoMode
-            ? "bg-siac-blocked/10 border-siac-blocked/30 text-siac-blocked hover:border-siac-blocked/50"
-            : "bg-siac-accent/10 border-siac-accent/30 text-siac-accent hover:border-siac-accent/50"
+            ? "bg-siac-blocked border-siac-blocked text-industrial-950 hover:brightness-110 shadow-[0_0_20px_rgba(245,30,30,0.3)]"
+            : "bg-siac-accent border-siac-accent text-industrial-950 hover:brightness-110 shadow-[0_0_20px_rgba(77,196,147,0.3)]"
         )}
       >
-        {isDemoMode ? "■ Stop Demo" : "▶ Demo"}
+        {isDemoMode ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        {isDemoMode ? "Stop Demo" : "Demo"}
       </button>
 
       {/* Sidebar Overlay (Mobile) */}
