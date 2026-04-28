@@ -105,6 +105,177 @@ const LinkedinIcon = ({ className }: { className?: string }) => {
   );
 };
 
+const DocumentationView = () => {
+  const [copied, setCopied] = useState(false);
+  const email = 'leandrodesign.ux@gmail.com';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="flex-1 overflow-y-auto p-6 md:p-10 bg-industrial-950"
+    >
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(900px 320px at 20% 20%, rgba(34,211,238,0.35) 0%, rgba(34,211,238,0.08) 38%, rgba(0,0,0,0) 70%), linear-gradient(135deg, rgba(12,18,34,1) 0%, rgba(22,29,49,1) 45%, rgba(0,0,0,1) 100%)',
+            }}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.06)_0%,_transparent_55%)]" />
+
+          <div className="relative p-8 md:p-12">
+            <div className="flex flex-col gap-8">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
+                  <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-200">DocumentationView</span>
+                </div>
+
+                <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.05]">
+                  Leandro Balbian
+                </h1>
+
+                <p className="text-sm md:text-base text-gray-200 max-w-3xl leading-relaxed">
+                  AI Product Architect | Design Intelligence Systems · SaaS PropTech & FinTech | Data-Driven UX · Agentes IA
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
+                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-7">
+                  <div className="text-[12px] md:text-[13px] font-semibold text-white">
+                    ¿Tu plataforma tiene fricción que no puedes ver pero que está costando conversión?
+                  </div>
+                  <div className="mt-3 text-[12px] text-gray-200 leading-relaxed">
+                    Este dashboard demuestra cómo una auditoría UX, tokens consistentes, micro-feedback y animaciones con intención
+                    pueden elevar legibilidad, performance percibida y decisiones operativas.
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-7 flex flex-col gap-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-300">Contacto</div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                      <div className="text-[11px] font-mono text-gray-200 truncate">{email}</div>
+                      <div className="mt-0.5 text-[10px] font-mono text-gray-400 truncate">
+                        {copied ? 'Copiado al portapapeles' : 'Click para copiar'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(email);
+                          setCopied(true);
+                          window.setTimeout(() => setCopied(false), 1600);
+                        } catch {
+                          setCopied(true);
+                          window.setTimeout(() => setCopied(false), 1600);
+                        }
+                      }}
+                      className="shrink-0 p-2.5 rounded-xl border border-white/10 bg-card/30 text-gray-300 hover:text-siac-accent hover:border-siac-accent/30 transition-all"
+                      aria-label="Copiar correo"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <a
+                    href="https://www.linkedin.com/in/leodisenofreelance"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-siac-accent text-industrial-950 font-bold uppercase tracking-widest text-[11px] py-2.5 hover:brightness-110 transition-all"
+                  >
+                    <LinkedinIcon className="w-4 h-4" />
+                    LinkedIn
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, duration: 0.35, ease: 'easeOut' }}
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 md:p-7 shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-300">Herramientas</div>
+              <div className="w-10 h-10 rounded-xl bg-siac-accent/10 border border-siac-accent/20 flex items-center justify-center text-siac-accent">
+                <FileText className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-5 space-y-3">
+              {['Figma', 'Claude', 'Cursor', 'Windsurf', 'React', 'Framer Motion'].map((t) => (
+                <div key={t} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                  <div className="text-[13px] font-medium text-white">{t}</div>
+                  <div className="text-[11px] font-mono text-gray-400">tool</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.35, ease: 'easeOut' }}
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 md:p-7 shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-300">Procesos</div>
+              <div className="w-10 h-10 rounded-xl bg-siac-accent/10 border border-siac-accent/20 flex items-center justify-center text-siac-accent">
+                <Settings className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-5 space-y-3">
+              {['Auditoría UX', 'Refactor de Tokens', 'Optimización de IA y Performance'].map((t) => (
+                <div key={t} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                  <div className="text-[13px] font-medium text-white">{t}</div>
+                  <div className="mt-1 text-[12px] font-normal text-gray-200">
+                    Entregables iterativos con foco en legibilidad, consistencia y performance percibida.
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.35, ease: 'easeOut' }}
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 md:p-7 shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-300">Impacto</div>
+              <div className="w-10 h-10 rounded-xl bg-siac-accent/10 border border-siac-accent/20 flex items-center justify-center text-siac-accent">
+                <Activity className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-5 space-y-3">
+              {[
+                { title: 'Reducción de latencia perceptual', meta: 'Micro-feedback + stagger cap + shimmer' },
+                { title: 'Cumplimiento WCAG AA', meta: 'Jerarquía + contraste + tokens consistentes' },
+                { title: 'Eficiencia operativa', meta: 'Escaneo rápido + estados claros + mapa interactivo' },
+              ].map((item) => (
+                <div key={item.title} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                  <div className="text-[13px] font-medium text-white">{item.title}</div>
+                  <div className="mt-1 text-[11px] font-mono text-gray-400">{item.meta}</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const tokenToHex = (token: string) => {
   const t = String(token || '').replace(/^text-/, '').replace(/^bg-/, '').replace(/^border-/, '');
   if (t === 'siac-accent' || t === 'siac-active') return '#22D3EE';
@@ -2901,7 +3072,7 @@ const InteractiveMapView = () => {
 
 const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState<DeviceType | 'Todos'>('Todos');
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento' | 'Usuarios' | 'Configuración'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reportes' | 'mapa' | 'alarmas' | 'seguimiento' | 'Usuarios' | 'Configuración' | 'Documentación'>('dashboard');
   const [isSearching, setIsSearching] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>(generateAlarms());
   const [pins, setPins] = useState<Pin[]>(INITIAL_PINS);
@@ -3264,6 +3435,23 @@ const Dashboard = () => {
             )}
             <Settings className="w-5 h-5" /> Configuración
           </button>
+
+          <button 
+            onClick={() => { setCurrentView('Documentación'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all relative overflow-hidden",
+              currentView === 'Documentación' ? "bg-siac-accent/10 text-siac-accent" : "text-gray-500 hover:text-white hover:bg-industrial-800"
+            )}
+          >
+            {currentView === 'Documentación' && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-2 bottom-2 w-[3px] bg-siac-accent rounded-r"
+                transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+              />
+            )}
+            <FileText className="w-5 h-5" /> Documentación
+          </button>
         </nav>
 
         <div className="p-4 border-t border-industrial-800">
@@ -3364,6 +3552,15 @@ const Dashboard = () => {
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-accent">
                     <Settings className="w-3 h-3" />
                     <span>Configuración</span>
+                  </div>
+                </>
+              )}
+              {currentView === 'Documentación' && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-gray-700" />
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-siac-accent">
+                    <FileText className="w-3 h-3" />
+                    <span>Documentación</span>
                   </div>
                 </>
               )}
@@ -3991,6 +4188,8 @@ const Dashboard = () => {
             <UsersView />
           ) : currentView === 'Configuración' ? (
             <SettingsView />
+          ) : currentView === 'Documentación' ? (
+            <DocumentationView />
           ) : (
             <ReportsView isSearching={isSearching} setIsSearching={setIsSearching} />
           )}
