@@ -57,7 +57,8 @@ import {
   Play,
   Square,
   Loader2,
-  Check
+  Check,
+  Copy
 } from 'lucide-react';
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -1923,6 +1924,8 @@ const SettingsView = () => {
 // --- Components ---
 
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
+  const [copiedToastOpen, setCopiedToastOpen] = useState(false);
+
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-cover bg-center"
@@ -2021,7 +2024,58 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
             <span>IP: 192.168.1.104</span>
           </div>
         </motion.div>
+
+        <div className="md:col-start-2 flex flex-col items-center gap-2 -mt-5">
+          <div className="text-[11px] tracking-wider text-white/40 hover:text-white/60 transition-colors">
+            <span className="font-semibold text-white/50">Leandro Balbian</span>{' '}
+            <span className="text-white/40">— Product Designer</span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] tracking-wider text-white/35 hover:text-white/60 transition-colors">
+            <span className="font-mono">leandrodesign.ux@gmail.com</span>
+            <button
+              type="button"
+              className="p-1 rounded-md border border-white/10 bg-card/10 hover:bg-card/20 hover:border-siac-accent/30"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText('leandrodesign.ux@gmail.com');
+                  setCopiedToastOpen(true);
+                  window.setTimeout(() => setCopiedToastOpen(false), 2200);
+                } catch {
+                  setCopiedToastOpen(true);
+                  window.setTimeout(() => setCopiedToastOpen(false), 2200);
+                }
+              }}
+              aria-label="Copiar correo"
+            >
+              <Copy className="w-4 h-4 text-white/45 hover:text-siac-accent transition-colors" />
+            </button>
+          </div>
+        </div>
       </motion.div>
+
+      <div className="fixed top-4 right-4 z-[70] flex flex-col gap-3 pointer-events-none">
+        <AnimatePresence>
+          {copiedToastOpen && (
+            <motion.div
+              key="copy-toast"
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="pointer-events-none"
+            >
+              <div className="bg-[rgba(30,42,66,0.7)] backdrop-blur-[8px] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+                <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: '3px solid #4DC493' }}>
+                  <div className="flex-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Notificación</div>
+                    <div className="mt-0.5 text-xs font-bold text-white">Correo copiado al portapapeles</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -3008,6 +3062,48 @@ const Dashboard = () => {
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        <div className="px-4 pt-4">
+          <motion.div
+            whileHover={{ x: 2, boxShadow: '0 0 18px rgba(77,196,147,0.25)' }}
+            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+            className="rounded-xl bg-white/5 backdrop-blur-md border border-white/10 px-3 py-2"
+          >
+            <div className="flex items-center gap-2">
+              <a
+                href="https://www.linkedin.com/in/leodisenofreelance"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 min-w-0"
+              >
+                <div className="text-[11px] tracking-wider text-white truncate">
+                  <span className="font-semibold">Leandro Balbian</span>{' '}
+                  <span className="opacity-60">— Product Designer</span>
+                </div>
+              </a>
+
+              <motion.a
+                href="https://www.linkedin.com/in/leodisenofreelance"
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 p-2 rounded-lg border border-white/10 bg-card/30 text-gray-400"
+                whileHover={{ scale: 1.2, color: '#4DC493', borderColor: 'rgba(77,196,147,0.35)' }}
+                transition={{ type: 'spring', stiffness: 520, damping: 26 }}
+                aria-label="LinkedIn"
+              >
+                <LinkedinIcon className="w-4 h-4" />
+              </motion.a>
+
+              <button
+                disabled
+                className="shrink-0 px-3 py-2 rounded-lg text-[11px] tracking-wider uppercase border border-white/10 bg-card/20 text-white/40 cursor-not-allowed"
+                aria-label="Portafolio (próximamente)"
+              >
+                Portafolio
+              </button>
+            </div>
+          </motion.div>
+        </div>
         
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <button 
@@ -3125,49 +3221,7 @@ const Dashboard = () => {
           </button>
         </nav>
 
-        <div className="p-4 border-t border-industrial-800 space-y-3">
-          <motion.div
-            whileHover={{ x: 2, boxShadow: '0 0 18px rgba(77,196,147,0.25)' }}
-            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            className="rounded-xl bg-white/5 backdrop-blur-md border border-white/10 p-3"
-          >
-            <div className="flex items-center gap-2">
-              <motion.a
-                href="https://www.linkedin.com/in/leodisenofreelance"
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 min-w-0 flex items-center gap-2"
-              >
-                <div className="min-w-0">
-                  <div className="text-[11px] tracking-wider text-white truncate">
-                    <span className="font-semibold">Leandro Balbian</span>{' '}
-                    <span className="opacity-60">— Product Designer</span>
-                  </div>
-                </div>
-              </motion.a>
-
-              <motion.a
-                href="https://www.linkedin.com/in/leodisenofreelance"
-                target="_blank"
-                rel="noreferrer"
-                className="shrink-0 p-2 rounded-lg border border-white/10 bg-card/30 text-gray-400"
-                whileHover={{ scale: 1.2, color: '#4DC493', borderColor: 'rgba(77,196,147,0.35)' }}
-                transition={{ type: 'spring', stiffness: 520, damping: 26 }}
-                aria-label="LinkedIn"
-              >
-                <LinkedinIcon className="w-4 h-4" />
-              </motion.a>
-
-              <button
-                disabled
-                className="shrink-0 px-3 py-2 rounded-lg text-[11px] tracking-wider uppercase border border-white/10 bg-card/20 text-white/40 cursor-not-allowed"
-                aria-label="Portafolio (próximamente)"
-              >
-                Portafolio
-              </button>
-            </div>
-          </motion.div>
-
+        <div className="p-4 border-t border-industrial-800">
           <button 
             onClick={() => window.location.reload()}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-siac-blocked hover:bg-siac-blocked/5 rounded-lg font-medium transition-all group"
