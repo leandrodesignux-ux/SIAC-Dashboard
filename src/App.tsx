@@ -55,7 +55,9 @@ import {
   Palette,
   RefreshCw,
   Play,
-  Square
+  Square,
+  Loader2,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -226,6 +228,17 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [deviceTypeFilters, setDeviceTypeFilters] = useState<string[]>([]);
   const [severityFilters, setSeverityFilters] = useState<string[]>([]);
+  const [resolveState, setResolveState] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const runSimulatedAction = (
+    setState: React.Dispatch<React.SetStateAction<'idle' | 'loading' | 'success'>>
+  ) => {
+    setState('loading');
+    window.setTimeout(() => {
+      setState('success');
+      window.setTimeout(() => setState('idle'), 900);
+    }, 1500);
+  };
 
   const alarmKPIs = [
     { label: 'Alertas Totales', value: '1,284', trend: '+12%', color: 'text-white', data: [20, 35, 25, 45, 30, 55, 40] },
@@ -363,81 +376,84 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       onClick={() => setIsFilterOpen(false)}
                       className="fixed inset-0 z-40"
                     />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      className="absolute right-0 mt-2 w-[360px] bg-card border border-border-card rounded-2xl shadow-2xl z-50 overflow-hidden"
-                    >
-                      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-4 bg-siac-accent rounded-full" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Filtros</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setDeviceTypeFilters([]);
-                            setSeverityFilters([]);
-                          }}
-                          className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
-                        >
-                          Limpiar
-                        </button>
-                      </div>
+                    <div className="grid grid-cols-12 gap-6">
+                      {/* Filters */}
+                      <div className={cn(
+                        "col-span-12 lg:col-span-3 xl:col-span-2",
+                        isFilterOpen ? "block" : "hidden lg:block"
+                      )}>
+                        <div className="bg-card border border-border-card rounded-2xl overflow-hidden">
+                          <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-4 bg-siac-accent rounded-full" />
+                              <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Filtros</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setDeviceTypeFilters([]);
+                                setSeverityFilters([]);
+                              }}
+                              className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white hover:opacity-100 transition-colors"
+                            >
+                              Limpiar
+                            </button>
+                          </div>
 
-                      <div className="p-5 space-y-5">
-                        <div className="space-y-3">
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Tipo de Dispositivo</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {deviceTypeOptions.map((opt) => {
-                              const checked = deviceTypeFilters.includes(opt.id);
-                              return (
-                                <label key={opt.id} className="flex items-center gap-2 bg-card border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => {
-                                      setDeviceTypeFilters((prev) => (
-                                        prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
-                                      ));
-                                    }}
-                                    className="accent-siac-accent"
-                                  />
-                                  <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
-                                </label>
-                              );
-                            })}
+                          <div className="p-5 space-y-5">
+                            <div className="space-y-3">
+                              <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Tipo de Dispositivo</div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {deviceTypeOptions.map((opt) => {
+                                  const checked = deviceTypeFilters.includes(opt.id);
+                                  return (
+                                    <label key={opt.id} className="flex items-center gap-2 bg-card border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
+                                      <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={() => {
+                                          setDeviceTypeFilters((prev) => (
+                                            prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
+                                          ));
+                                        }}
+                                        className="accent-siac-accent"
+                                      />
+                                      <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Tipo de Severidad</div>
+                              <div className="grid grid-cols-1 gap-2">
+                                {severityOptions.map((opt) => {
+                                  const checked = severityFilters.includes(opt.id);
+                                  return (
+                                    <label key={opt.id} className="flex items-center justify-between gap-3 bg-card border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={() => {
+                                            setSeverityFilters((prev) => (
+                                              prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
+                                            ));
+                                          }}
+                                          className="accent-siac-accent"
+                                        />
+                                        <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
+                                      </div>
+                                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         </div>
-
-                        <div className="space-y-3">
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Tipo de Severidad</div>
-                          <div className="grid grid-cols-1 gap-2">
-                            {severityOptions.map((opt) => {
-                              const checked = severityFilters.includes(opt.id);
-                              return (
-                                <label key={opt.id} className="flex items-center justify-between gap-3 bg-card border border-white/5 rounded-lg px-3 py-2 cursor-pointer hover:border-white/10 transition-colors">
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="checkbox"
-                                      checked={checked}
-                                      onChange={() => {
-                                        setSeverityFilters((prev) => (
-                                          prev.includes(opt.id) ? prev.filter(v => v !== opt.id) : [...prev, opt.id]
-                                        ));
-                                      }}
-                                      className="accent-siac-accent"
-                                    />
-                                    <span className="text-[10px] font-mono text-gray-200 uppercase tracking-wider">{opt.label}</span>
-                                  </div>
-                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
                       </div>
-                    </motion.div>
+                    </div>
                   </>
                 )}
               </AnimatePresence>
@@ -445,17 +461,15 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {alarmKPIs.map((kpi, i) => (
-            <motion.div 
+            <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              whileHover={{ y: -4 }}
               className="bg-card border border-border-card p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-accent/30 transition-all"
             >
               <div className="flex justify-between items-start z-10">
-                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">{kpi.label}</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 text-white">{kpi.label}</span>
                 <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/20", kpi.trend.startsWith('+') ? 'text-siac-accent' : 'text-siac-blocked')}>
                   {kpi.trend}
                 </span>
@@ -720,8 +734,20 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <button className="flex items-center justify-center gap-2 py-3 bg-industrial-800 hover:bg-industrial-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
                   Generar Reporte
                 </button>
-                <button className="flex items-center justify-center gap-2 py-3 bg-siac-accent hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
-                  Resolver Alarma
+                <button
+                  onClick={() => runSimulatedAction(setResolveState)}
+                  disabled={resolveState === 'loading'}
+                  className={cn(
+                    "flex items-center justify-center gap-2 py-3 bg-siac-accent hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-wider rounded-xl transition-all",
+                    resolveState === 'loading' && "opacity-80 cursor-not-allowed"
+                  )}
+                >
+                  {resolveState === 'loading' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : resolveState === 'success' ? (
+                    <Check className="w-4 h-4" />
+                  ) : null}
+                  Resolver
                 </button>
               </div>
             </motion.div>
@@ -1878,7 +1904,11 @@ const SettingsView = () => {
 
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   return (
-    <div className="min-h-screen bg-industrial-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-cover bg-center"
+      style={{ backgroundImage: "url('/login-bg.png')" }}
+    >
+      <div className="absolute inset-0 bg-industrial-950/65" />
       {/* Background patterns */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-siac-accent/20 via-transparent to-transparent" />
@@ -1929,33 +1959,33 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
         </div>
 
         <motion.div 
-          className="bg-card border border-border-card p-8 rounded-2xl shadow-2xl relative group"
+          className="bg-[rgba(30,42,66,0.7)] backdrop-blur-[8px] border border-white/10 p-8 rounded-2xl shadow-2xl relative group"
           whileHover={{ borderColor: 'rgba(77,196,147,0.35)' }}
         >
           <div className="absolute -top-4 -right-4 w-24 h-24 bg-siac-accent/5 blur-3xl rounded-full" />
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             Bienvenido <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
           </h3>
           <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
             <div className="space-y-1">
-              <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Usuario</label>
+              <label className="text-xs uppercase tracking-widest text-gray-200 font-bold">Usuario</label>
               <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-200" />
                 <input 
                   type="text" 
                   defaultValue="admin@siac.mx"
-                  className="w-full bg-industrial-950/30 border border-border-card rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-colors" 
+                  className="w-full bg-industrial-950/35 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-siac-accent/50 transition-colors" 
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs uppercase tracking-widest text-gray-500 font-bold">Contraseña</label>
+              <label className="text-xs uppercase tracking-widest text-gray-200 font-bold">Contraseña</label>
               <div className="relative">
-                <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-200" />
                 <input 
                   type="password" 
                   defaultValue="password"
-                  className="w-full bg-industrial-950/30 border border-border-card rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-accent/50 transition-colors" 
+                  className="w-full bg-industrial-950/35 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-siac-accent/50 transition-colors" 
                 />
               </div>
             </div>
@@ -1966,7 +1996,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
               Ingresar <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
-          <div className="mt-6 pt-6 border-t border-border-card flex justify-between items-center text-[10px] text-gray-600 font-mono">
+          <div className="mt-6 pt-6 border-t border-white/10 flex justify-between items-center text-[10px] text-gray-300/80 font-mono">
             <span>SIAC CORE V2.4.0</span>
             <span>IP: 192.168.1.104</span>
           </div>
@@ -2764,6 +2794,7 @@ const Dashboard = () => {
   const [hoveredPinId, setHoveredPinId] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [toasts, setToasts] = useState<any[]>([]);
+  const [exportState, setExportState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [kpis, setKpis] = useState<any[]>(() => ([
     { id: 'Cámara', label: 'Cámaras', icon: Camera, value: 12, total: 13, status: 'AVISO', color: 'siac-disarmed', data: [8, 10, 9, 11, 10, 12, 12, 11] },
     { id: 'Infrarrojo', label: 'Infrarrojos', icon: Thermometer, value: 9, total: 12, status: 'ALERTA', color: 'siac-blocked', data: [11, 10, 10, 9, 10, 9, 9, 9] },
@@ -2775,6 +2806,16 @@ const Dashboard = () => {
   useEffect(() => {
     setLastUpdatedAt(Date.now());
   }, [isDemoMode]);
+
+  const runSimulatedAction = (
+    setState: React.Dispatch<React.SetStateAction<'idle' | 'loading' | 'success'>>
+  ) => {
+    setState('loading');
+    window.setTimeout(() => {
+      setState('success');
+      window.setTimeout(() => setState('idle'), 900);
+    }, 1500);
+  };
 
   useEffect(() => {
     if (isDemoMode) return;
@@ -2871,7 +2912,12 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-industrial-950 text-white overflow-hidden relative">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="flex h-screen bg-industrial-950 text-white overflow-hidden relative"
+    >
       <div className="fixed top-4 right-4 z-[70] flex flex-col gap-3 pointer-events-none">
         <AnimatePresence>
           {toasts.map((t: any) => (
@@ -3589,7 +3635,19 @@ const Dashboard = () => {
                           className="w-full bg-card border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-siac-armed sm:w-48 lg:w-64"
                         />
                       </div>
-                      <button className="bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all">
+                      <button
+                        onClick={() => runSimulatedAction(setExportState)}
+                        disabled={exportState === 'loading'}
+                        className={cn(
+                          "bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all inline-flex items-center gap-2",
+                          exportState === 'loading' && "opacity-80 cursor-not-allowed"
+                        )}
+                      >
+                        {exportState === 'loading' ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : exportState === 'success' ? (
+                          <Check className="w-4 h-4" />
+                        ) : null}
                         Exportar
                       </button>
                     </div>
@@ -3616,7 +3674,7 @@ const Dashboard = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                          <tr className="border-b border-white/5 text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">
                             <th className="px-6 py-4">Evento ID</th>
                             <th className="px-6 py-4">Fecha / Hora</th>
                             <th className="px-6 py-4">Dispositivo</th>
@@ -3703,7 +3761,7 @@ const Dashboard = () => {
           )}
         </div>
       </main>
-    </div>
+    </motion.div>
   );
 };
 
