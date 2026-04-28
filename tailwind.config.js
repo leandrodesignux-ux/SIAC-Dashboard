@@ -17,8 +17,8 @@ export default {
         'border-card': 'rgba(255,255,255,0.07)',
         siac: {
           armed: '#0B986A',
-          active: '#4DC493',
-          accent: '#4DC493',
+          active: '#22D3EE',
+          accent: '#22D3EE',
           disarmed: '#D89A1E',
           alarmed: '#FAD92A',
           blocked: '#F51E1E',

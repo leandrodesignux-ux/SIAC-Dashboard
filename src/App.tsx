@@ -107,7 +107,7 @@ const LinkedinIcon = ({ className }: { className?: string }) => {
 
 const tokenToHex = (token: string) => {
   const t = String(token || '').replace(/^text-/, '').replace(/^bg-/, '').replace(/^border-/, '');
-  if (t === 'siac-accent' || t === 'siac-active') return '#4DC493';
+  if (t === 'siac-accent' || t === 'siac-active') return '#22D3EE';
   if (t === 'siac-armed' || t === 'siac-green') return '#0B986A';
   if (t === 'siac-disarmed' || t === 'siac-orange') return '#D89A1E';
   if (t === 'siac-alarmed') return '#FAD92A';
@@ -250,14 +250,30 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
   const [deviceTypeFilters, setDeviceTypeFilters] = useState<string[]>([]);
   const [severityFilters, setSeverityFilters] = useState<string[]>([]);
   const [resolveState, setResolveState] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [resolveConfirmState, setResolveConfirmState] = useState<'idle' | 'show'>('idle');
 
   const runSimulatedAction = (
-    setState: React.Dispatch<React.SetStateAction<'idle' | 'loading' | 'success'>>
+    setState: React.Dispatch<React.SetStateAction<'idle' | 'loading' | 'success'>>,
+    onSuccess?: () => void
   ) => {
     setState('loading');
     window.setTimeout(() => {
       setState('success');
+      onSuccess?.();
       window.setTimeout(() => setState('idle'), 900);
+    }, 1500);
+  };
+
+  const runResolveWithConfirm = () => {
+    setResolveState('loading');
+    window.setTimeout(() => {
+      setResolveState('success');
+      setResolveConfirmState('show');
+      window.setTimeout(() => {
+        setSelectedAlarm(null);
+        setResolveConfirmState('idle');
+        setResolveState('idle');
+      }, 650);
     }, 1500);
   };
 
@@ -271,13 +287,13 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
   const alarmsData = [
     { id: 'EV-8392', timestamp: '2026-04-26 14:22:10', activo: 'CAM-01', tipo: 'Camera', severidad: 'Crítico', color: '#F51E1E', ip: '192.168.1.101', ubicacion: 'ZONA_NORTE_01' },
     { id: 'EV-8391', timestamp: '2026-04-26 14:18:05', activo: 'INF-02', tipo: 'Thermometer', severidad: 'Advertencia', color: '#D89A1E', ip: '192.168.1.105', ubicacion: 'PERIMETRO_B' },
-    { id: 'EV-8390', timestamp: '2026-04-26 14:05:44', activo: 'PIR-05', tipo: 'Radio', severidad: 'Informativo', color: '#4DC493', ip: '192.168.1.112', ubicacion: 'ALMACEN_CENTRAL' },
+    { id: 'EV-8390', timestamp: '2026-04-26 14:05:44', activo: 'PIR-05', tipo: 'Radio', severidad: 'Informativo', color: '#22D3EE', ip: '192.168.1.112', ubicacion: 'ALMACEN_CENTRAL' },
     { id: 'EV-8389', timestamp: '2026-04-26 13:55:12', activo: 'GW-ALPHA', tipo: 'Cpu', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.45', ubicacion: 'SALA_SERVIDORES' },
     { id: 'EV-8388', timestamp: '2026-04-26 13:42:30', activo: 'ACT-99', tipo: 'Activity', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.89', ubicacion: 'VALVULA_PRINCIPAL' },
     { id: 'EV-8387', timestamp: '2026-04-26 13:35:02', activo: 'MACH-TR_07', tipo: 'Tractor', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.77', ubicacion: 'OBRA_SECTOR_02' },
-    { id: 'EV-8386', timestamp: '2026-04-26 13:28:19', activo: 'USR-MOB_12', tipo: 'Smartphone', severidad: 'Informativo', color: '#4DC493', ip: '10.0.0.12', ubicacion: 'ACCESO_SUR' },
+    { id: 'EV-8386', timestamp: '2026-04-26 13:28:19', activo: 'USR-MOB_12', tipo: 'Smartphone', severidad: 'Informativo', color: '#22D3EE', ip: '10.0.0.12', ubicacion: 'ACCESO_SUR' },
     { id: 'EV-8385', timestamp: '2026-04-26 13:21:44', activo: 'PPE-STAFF_03', tipo: 'Shirt', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.33', ubicacion: 'ZONA_RESTRINGIDA_A' },
-    { id: 'EV-8384', timestamp: '2026-04-26 13:10:08', activo: 'SOL-GRID_01', tipo: 'Grid', severidad: 'Informativo', color: '#4DC493', ip: '10.0.0.201', ubicacion: 'PLANTA_SOLAR' },
+    { id: 'EV-8384', timestamp: '2026-04-26 13:10:08', activo: 'SOL-GRID_01', tipo: 'Grid', severidad: 'Informativo', color: '#22D3EE', ip: '10.0.0.201', ubicacion: 'PLANTA_SOLAR' },
     { id: 'EV-8383', timestamp: '2026-04-26 12:58:51', activo: 'TWR-SIG_04', tipo: 'Signal', severidad: 'Advertencia', color: '#D89A1E', ip: '10.0.0.154', ubicacion: 'TORRE_COMMS' },
     { id: 'EV-8382', timestamp: '2026-04-26 12:42:17', activo: 'DB-EDGE_01', tipo: 'Database', severidad: 'Crítico', color: '#F51E1E', ip: '10.0.0.250', ubicacion: 'EDGE_DC' },
   ];
@@ -299,7 +315,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
   const severityOptions = [
     { id: 'Crítico', label: 'Crítico', color: '#F51E1E' },
     { id: 'Advertencia', label: 'Advertencia', color: '#D89A1E' },
-    { id: 'Informativo', label: 'Informativo', color: '#4DC493' },
+    { id: 'Informativo', label: 'Informativo', color: '#22D3EE' },
   ];
 
   const renderIcon = (tipo: string) => {
@@ -361,12 +377,12 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">Gestión de Alarmas</h1>
-              <p className="text-xs text-gray-500 uppercase font-mono tracking-widest">Product Intelligence Unit</p>
+              <p className="text-xs text-gray-300 uppercase font-mono tracking-widest">Product Intelligence Unit</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
               <input 
                 type="text" 
                 placeholder="Buscar evento o activo..."
@@ -380,7 +396,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 onClick={() => setIsFilterOpen(v => !v)}
                 className={cn(
                   "flex items-center gap-2 bg-card border px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                  isFilterOpen ? "border-siac-accent/40 text-white" : "border-border-card text-gray-400 hover:text-white"
+                  isFilterOpen ? "border-siac-accent/40 text-white" : "border-border-card text-gray-300 hover:text-white"
                 )}
               >
                 <Filter className="w-4 h-4" />
@@ -407,14 +423,14 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                           <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className="w-1.5 h-4 bg-siac-accent rounded-full" />
-                              <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Filtros</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Filtros</span>
                             </div>
                             <button
                               onClick={() => {
                                 setDeviceTypeFilters([]);
                                 setSeverityFilters([]);
                               }}
-                              className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white hover:opacity-100 transition-colors"
+                              className="text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-white transition-colors"
                             >
                               Limpiar
                             </button>
@@ -422,7 +438,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
 
                           <div className="p-5 space-y-5">
                             <div className="space-y-3">
-                              <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Tipo de Dispositivo</div>
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Tipo de Dispositivo</div>
                               <div className="grid grid-cols-2 gap-2">
                                 {deviceTypeOptions.map((opt) => {
                                   const checked = deviceTypeFilters.includes(opt.id);
@@ -446,7 +462,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                             </div>
 
                             <div className="space-y-3">
-                              <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Tipo de Severidad</div>
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Tipo de Severidad</div>
                               <div className="grid grid-cols-1 gap-2">
                                 {severityOptions.map((opt) => {
                                   const checked = severityFilters.includes(opt.id);
@@ -490,7 +506,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
               className="bg-card border border-border-card p-5 rounded-xl flex flex-col gap-4 relative overflow-hidden group hover:border-siac-accent/30 transition-all"
             >
               <div className="flex justify-between items-start z-10">
-                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 text-white">{kpi.label}</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-300">{kpi.label}</span>
                 <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/20", kpi.trend.startsWith('+') ? 'text-siac-accent' : 'text-siac-blocked')}>
                   {kpi.trend}
                 </span>
@@ -500,7 +516,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <div className="h-8 w-24">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={kpi.data.map((v, i) => ({ v, i }))}>
-                      <Line type="monotone" dataKey="v" stroke={kpi.color.includes('siac-accent') ? '#4DC493' : kpi.color.includes('siac-blocked') ? '#F51E1E' : '#FFFFFF'} strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="v" stroke={kpi.color.includes('siac-accent') ? '#22D3EE' : kpi.color.includes('siac-blocked') ? '#F51E1E' : '#FFFFFF'} strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -520,19 +536,19 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
             <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-widest text-white">Listado de Eventos en Tiempo Real</span>
           </div>
-          <span className="text-[10px] font-mono text-gray-500 uppercase">Total: {filteredAlarms.length} registros</span>
+          <span className="text-[10px] font-mono text-gray-300 uppercase">Total: {filteredAlarms.length} registros</span>
         </div>
         
         <div className="flex-1 overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border-card">
-                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">ID Evento</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Timestamp</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Activo</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest text-center">Tipo</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest">Severidad</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-500 tracking-widest text-right">Acciones</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-300 tracking-widest">ID Evento</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-300 tracking-widest">Timestamp</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-300 tracking-widest">Activo</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-300 tracking-widest text-center">Tipo</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-300 tracking-widest">Severidad</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase text-gray-300 tracking-widest text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -550,11 +566,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     borderLeft: alarm.color === '#FAD92A' ? '3px solid #FAD92A' : alarm.color === '#F51E1E' ? '3px solid #F51E1E' : undefined,
                   }}
                 >
-                  <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.id}</td>
-                  <td className="px-6 py-4 text-xs font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.timestamp}</td>
+                  <td className="px-6 py-4 text-xs font-mono text-gray-300 group-hover:text-white transition-colors">{alarm.id}</td>
+                  <td className="px-6 py-4 text-xs font-mono text-gray-300 group-hover:text-white transition-colors">{alarm.timestamp}</td>
                   <td className="px-6 py-4 text-xs font-bold text-white uppercase">{alarm.activo}</td>
                   <td className="px-6 py-4 text-center">
-                    <div className="inline-flex p-1.5 bg-card rounded-lg text-gray-500 group-hover:text-siac-accent transition-colors">
+                    <div className="inline-flex p-1.5 bg-card rounded-lg text-gray-300 group-hover:text-siac-accent transition-colors">
                       {renderIcon(alarm.tipo)}
                     </div>
                   </td>
@@ -570,7 +586,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => onNavigateToMap()}
-                        className="p-2 text-gray-500 hover:text-siac-accent transition-all hover:bg-siac-accent/10 rounded-lg"
+                        className="p-2 text-gray-300 hover:text-siac-accent transition-all hover:bg-siac-accent/10 rounded-lg"
                         title="Ver en Mapa"
                       >
                         <MapIcon className="w-4 h-4" />
@@ -594,7 +610,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                       </div>
                       <div className="space-y-1">
                         <p className="text-white font-bold uppercase tracking-widest">No hay alertas críticas en el sector</p>
-                        <p className="text-xs text-gray-500 font-mono uppercase">Todo el sistema opera dentro de los parámetros normales</p>
+                        <p className="text-xs text-gray-300 font-mono uppercase">Todo el sistema opera dentro de los parámetros normales</p>
                       </div>
                     </div>
                   </td>
@@ -634,7 +650,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     </div>
                     <div className="space-y-2">
                       <div className="text-xs font-bold text-white uppercase tracking-widest truncate">{selectedAlarm.id}</div>
-                      <div className="text-[10px] font-mono text-gray-500 truncate">Timestamp: {selectedAlarm.timestamp}</div>
+                      <div className="text-[10px] font-mono text-gray-300 truncate">Timestamp: {selectedAlarm.timestamp}</div>
                     </div>
                   </div>
 
@@ -647,7 +663,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     </span>
                     <button 
                       onClick={() => setSelectedAlarm(null)}
-                      className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                      className="p-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-full transition-all"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -659,11 +675,11 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 {/* Asset Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-card p-4 rounded-xl border border-border-card">
-                    <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Dirección IP</p>
+                    <p className="text-[8px] uppercase font-bold text-gray-300 tracking-widest mb-1">Dirección IP</p>
                     <p className="text-xs font-mono text-white">{selectedAlarm.ip}</p>
                   </div>
                   <div className="bg-card p-4 rounded-xl border border-border-card">
-                    <p className="text-[8px] uppercase font-bold text-gray-500 tracking-widest mb-1">Ubicación Técnica</p>
+                    <p className="text-[8px] uppercase font-bold text-gray-300 tracking-widest mb-1">Ubicación Técnica</p>
                     <p className="text-xs font-mono text-white">{selectedAlarm.ubicacion}</p>
                   </div>
                 </div>
@@ -672,7 +688,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Actividad (Últimos 10 min)</h4>
-                    <span className="text-[8px] font-mono text-gray-500 uppercase">Tiempo real • 100ms lag</span>
+                    <span className="text-[8px] font-mono text-gray-300 uppercase">Tiempo real • 100ms lag</span>
                   </div>
                   <div className="h-48 w-full bg-card rounded-2xl border border-border-card p-4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -699,15 +715,15 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] uppercase font-bold text-siac-accent tracking-widest">Mapa Estático</h4>
-                    <span className="text-[8px] font-mono text-gray-500 uppercase">Ubicación técnica</span>
+                    <span className="text-[8px] font-mono text-gray-300 uppercase">Ubicación técnica</span>
                   </div>
                   <div className="h-36 w-full rounded-2xl border border-border-card overflow-hidden bg-card relative">
                     <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(77,196,147,0.12)_0%,_transparent_55%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(34,211,238,0.12)_0%,_transparent_55%)]" />
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
                       <div className="flex items-center justify-between">
                         <div className="text-[10px] font-bold uppercase tracking-widest text-white">{selectedAlarm.ubicacion}</div>
-                        <div className="text-[9px] font-mono text-gray-400">LAT 19.4326 • LON -99.1332</div>
+                        <div className="text-[9px] font-mono text-gray-300">LAT 19.4326 • LON -99.1332</div>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -742,7 +758,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                           step.type === 'error' ? 'bg-siac-blocked' : step.type === 'warn' ? 'bg-[#D89A1E]' : 'bg-siac-accent'
                         )} />
                         <div className="flex-1">
-                          <p className="text-[10px] font-mono text-gray-500 mb-1">{step.time}</p>
+                          <p className="text-[10px] font-mono text-gray-300 mb-1">{step.time}</p>
                           <p className="text-xs text-white uppercase tracking-tight">{step.msg}</p>
                         </div>
                       </div>
@@ -756,8 +772,8 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   Generar Reporte
                 </button>
                 <button
-                  onClick={() => runSimulatedAction(setResolveState)}
-                  disabled={resolveState === 'loading'}
+                  onClick={() => runResolveWithConfirm()}
+                  disabled={resolveState === 'loading' || resolveConfirmState === 'show'}
                   className={cn(
                     "flex items-center justify-center gap-2 py-3 bg-siac-accent hover:brightness-110 text-industrial-950 text-xs font-bold uppercase tracking-wider rounded-xl transition-all",
                     resolveState === 'loading' && "opacity-80 cursor-not-allowed"
@@ -766,7 +782,9 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   {resolveState === 'loading' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : resolveState === 'success' ? (
-                    <Check className="w-4 h-4" />
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-siac-armed text-industrial-950">
+                      <Check className="w-3.5 h-3.5" />
+                    </span>
                   ) : null}
                   Resolver
                 </button>
@@ -871,7 +889,7 @@ const TrackingView = () => {
     }
     return (
       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
-        style={{ color: '#4DC493', borderColor: '#4DC49340', backgroundColor: '#4DC49310' }}
+        style={{ color: '#22D3EE', borderColor: '#22D3EE40', backgroundColor: '#22D3EE10' }}
       >
         Online
       </span>
@@ -879,7 +897,7 @@ const TrackingView = () => {
   };
 
   const eventColor = (evt: any) => {
-    if (evt?.kind === 'operational') return '#4DC493';
+    if (evt?.kind === 'operational') return '#22D3EE';
     if (evt?.kind === 'alert') return evt?.level === 'warning' ? '#D89A1E' : '#F51E1E';
     return '#9CA3AF';
   };
@@ -894,12 +912,12 @@ const TrackingView = () => {
             </div>
             <div className="flex flex-col">
               <div className="text-sm font-bold uppercase tracking-widest text-white">Seguimiento</div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Asset selector • Tracking</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-300">Asset selector • Tracking</div>
             </div>
           </div>
 
           <div className="mt-5 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -928,7 +946,7 @@ const TrackingView = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-white uppercase tracking-widest truncate">{a.id}</div>
-                      <div className="text-[10px] font-mono text-gray-500 truncate">IP: {a.ip}</div>
+                      <div className="text-[10px] font-mono text-gray-300 truncate">IP: {a.ip}</div>
                     </div>
                   </div>
                   <div className="shrink-0">
@@ -950,7 +968,7 @@ const TrackingView = () => {
               </div>
               <div className="mt-6 space-y-2">
                 <div className="text-sm font-bold uppercase tracking-widest text-white">Seleccione un activo</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-widest">
+                <div className="text-xs font-mono text-gray-300 uppercase tracking-widest">
                   Elija un dispositivo para auditar su comportamiento histórico
                 </div>
               </div>
@@ -966,7 +984,7 @@ const TrackingView = () => {
                   </div>
                   <div className="flex flex-col">
                     <div className="text-xl font-black tracking-tight text-white">{selectedAsset.id}</div>
-                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+                    <div className="text-[10px] font-mono text-gray-300 uppercase tracking-widest">
                       {selectedAsset.ip} • {selectedAsset.tipo}
                     </div>
                   </div>
@@ -987,7 +1005,7 @@ const TrackingView = () => {
                         <div className="text-xs font-bold uppercase tracking-widest text-white">{kpi.label}</div>
                         <div className="text-lg font-black text-white">{kpi.value}</div>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-card border border-white/5 flex items-center justify-center text-gray-400">
+                      <div className="w-10 h-10 rounded-xl bg-card border border-white/5 flex items-center justify-center text-gray-300">
                         <Icon className="w-5 h-5" />
                       </div>
                     </div>
@@ -1003,7 +1021,7 @@ const TrackingView = () => {
                     <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
                     <span className="text-xs font-bold uppercase tracking-widest text-white">Timeline de Eventos</span>
                   </div>
-                  <span className="text-[10px] font-mono text-gray-500 uppercase">{timeline.length} eventos</span>
+                  <span className="text-[10px] font-mono text-gray-300 uppercase">{timeline.length} eventos</span>
                 </div>
 
                 <div className="p-6">
@@ -1035,9 +1053,9 @@ const TrackingView = () => {
                                 <div className="flex items-center justify-between gap-4">
                                   <div className="min-w-0">
                                     <div className="text-xs font-bold uppercase tracking-widest text-white truncate">{evt.title}</div>
-                                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest truncate">{evt.id}</div>
+                                    <div className="text-[10px] font-mono text-gray-300 uppercase tracking-widest truncate">{evt.id}</div>
                                   </div>
-                                  <div className="shrink-0 text-[10px] font-mono text-gray-400">{evt.time}</div>
+                                  <div className="shrink-0 text-[10px] font-mono text-gray-300">{evt.time}</div>
                                 </div>
                               </div>
                             </button>
@@ -1051,34 +1069,34 @@ const TrackingView = () => {
                                   className="ml-[44px] mt-3 bg-card border border-industrial-800 rounded-2xl p-4 shadow-2xl"
                                 >
                                   <div className="flex items-center justify-between">
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Metadatos técnicos</div>
-                                    <div className="text-[10px] font-mono text-gray-500 uppercase">{selectedAsset.id}</div>
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-300">Metadatos técnicos</div>
+                                    <div className="text-[10px] font-mono text-gray-300 uppercase">{selectedAsset.id}</div>
                                   </div>
                                   <div className="mt-4 grid grid-cols-2 gap-3">
                                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Evento</div>
+                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Evento</div>
                                       <div className="text-[11px] font-mono text-white">{evt.id}</div>
                                     </div>
                                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Timestamp</div>
+                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Timestamp</div>
                                       <div className="text-[11px] font-mono text-white">{evt.time}</div>
                                     </div>
                                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">IP</div>
+                                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">IP</div>
                                       <div className="text-[11px] font-mono text-white">{selectedAsset.ip}</div>
                                     </div>
                                     <div className="bg-card border border-white/5 rounded-xl p-3 flex items-center justify-between">
                                       <div>
-                                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Operador</div>
+                                        <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Operador</div>
                                         <div className="text-[11px] font-mono text-white">{evt.meta?.user ?? 'system'}</div>
                                       </div>
-                                      <div className="w-9 h-9 rounded-xl bg-card border border-white/5 flex items-center justify-center text-gray-400">
+                                      <div className="w-9 h-9 rounded-xl bg-card border border-white/5 flex items-center justify-center text-gray-300">
                                         <User className="w-4 h-4" />
                                       </div>
                                     </div>
                                   </div>
                                   <div className="mt-4 bg-card border border-white/5 rounded-xl p-3">
-                                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Payload</div>
+                                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Payload</div>
                                     <div className="mt-1 text-[11px] font-mono text-gray-200 break-words">
                                       {JSON.stringify(evt.meta)}
                                     </div>
@@ -1100,7 +1118,7 @@ const TrackingView = () => {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0B986A' }} />
                     <span className="text-xs font-bold uppercase tracking-widest text-white">Salud (24h)</span>
                   </div>
-                  <span className="text-[10px] font-mono text-gray-500 uppercase">Uptime / señal</span>
+                  <span className="text-[10px] font-mono text-gray-300 uppercase">Uptime / señal</span>
                 </div>
 
                 <div className="p-6">
@@ -1127,11 +1145,11 @@ const TrackingView = () => {
 
                   <div className="mt-5 grid grid-cols-2 gap-3">
                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Promedio</div>
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Promedio</div>
                       <div className="text-lg font-black text-white">94.1%</div>
                     </div>
                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Mínimo</div>
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Mínimo</div>
                       <div className="text-lg font-black" style={{ color: '#F51E1E' }}>78.0%</div>
                     </div>
                   </div>
@@ -1234,15 +1252,15 @@ const UsersView = () => {
           <div className="space-y-1">
             <div className="text-2xl font-bold text-white tracking-tight">Gestión de Usuarios (IAM)</div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 uppercase font-mono tracking-widest">IAM • Identity & Access</span>
-              <span className="text-[10px] font-mono uppercase text-gray-500">Usuarios Activos: <span className="text-white">{activeCount}</span></span>
+              <span className="text-xs text-gray-300 uppercase font-mono tracking-widest">IAM • Identity & Access</span>
+              <span className="text-[10px] font-mono uppercase text-gray-300">Usuarios Activos: <span className="text-white">{activeCount}</span></span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -1264,11 +1282,11 @@ const UsersView = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="bg-card border border-industrial-800 rounded-2xl p-10 text-center max-w-xl w-full">
             <div className="mx-auto w-14 h-14 rounded-2xl bg-card border border-white/5 flex items-center justify-center">
-              <Users className="w-7 h-7 text-gray-400" />
+              <Users className="w-7 h-7 text-gray-300" />
             </div>
             <div className="mt-6 space-y-2">
               <div className="text-sm font-bold uppercase tracking-widest text-white">Sin resultados</div>
-              <div className="text-xs font-mono text-gray-500 uppercase tracking-widest">Ajuste el buscador para localizar operadores</div>
+              <div className="text-xs font-mono text-gray-300 uppercase tracking-widest">Ajuste el buscador para localizar operadores</div>
             </div>
           </div>
         </div>
@@ -1293,7 +1311,7 @@ const UsersView = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-white truncate">{u.name}</div>
-                      <div className="text-[10px] font-mono text-gray-500 truncate">Email: {u.email}</div>
+                      <div className="text-[10px] font-mono text-gray-300 truncate">Email: {u.email}</div>
                       <div className="text-[11px] font-mono text-gray-300 truncate">{u.title}</div>
                       <div className="mt-3 flex items-center gap-2">
                         <span
@@ -1302,23 +1320,23 @@ const UsersView = () => {
                         >
                           {u.role}
                         </span>
-                        <span className="text-[10px] font-mono uppercase text-gray-500">{u.department}</span>
+                        <span className="text-[10px] font-mono uppercase text-gray-300">{u.department}</span>
                       </div>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-gray-500">ID</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-gray-300">ID</div>
                     <div className="text-[11px] font-mono text-gray-200">{u.id}</div>
                   </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <div className="bg-card border border-white/5 rounded-xl p-3">
-                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Último Acceso</div>
+                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Último Acceso</div>
                     <div className="text-[11px] font-mono text-white">{u.lastAccess}</div>
                   </div>
                   <div className="bg-card border border-white/5 rounded-xl p-3">
-                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Activos Asignados</div>
+                    <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Activos Asignados</div>
                     <div className="text-[11px] font-mono text-white">{u.assetsAssigned}</div>
                   </div>
                 </div>
@@ -1389,13 +1407,13 @@ const UsersView = () => {
                       >
                         {selectedUser.role}
                       </span>
-                      <span className="text-[10px] font-mono uppercase text-gray-500">{selectedUser.department}</span>
+                      <span className="text-[10px] font-mono uppercase text-gray-300">{selectedUser.department}</span>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedUser(null)}
-                  className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                  className="p-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-full transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1404,16 +1422,16 @@ const UsersView = () => {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="bg-card border border-white/5 rounded-2xl p-5">
                   <div className="flex items-center justify-between">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Accesos</div>
-                    <div className="text-[10px] font-mono uppercase text-gray-500">{selectedUser.id}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-300">Accesos</div>
+                    <div className="text-[10px] font-mono uppercase text-gray-300">{selectedUser.id}</div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Último Acceso</div>
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Último Acceso</div>
                       <div className="text-[11px] font-mono text-white">{selectedUser.lastAccess}</div>
                     </div>
                     <div className="bg-card border border-white/5 rounded-xl p-3">
-                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Activos Asignados</div>
+                      <div className="text-[9px] uppercase font-bold tracking-widest text-gray-300">Activos Asignados</div>
                       <div className="text-[11px] font-mono text-white">{selectedUser.assetsAssigned}</div>
                     </div>
                   </div>
@@ -1425,7 +1443,7 @@ const UsersView = () => {
                       <UserCog className="w-4 h-4 text-gray-300" />
                       <span className="text-xs font-bold uppercase tracking-widest text-white">Permisos por Zona</span>
                     </div>
-                    <span className="text-[10px] font-mono uppercase text-gray-500">{draftZones.length}/{zones.length}</span>
+                    <span className="text-[10px] font-mono uppercase text-gray-300">{draftZones.length}/{zones.length}</span>
                   </div>
                   <div className="p-5 grid grid-cols-1 gap-2">
                     {zones.map((z) => (
@@ -1949,7 +1967,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
       >
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-siac-accent rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(77,196,147,0.35)]">
+            <div className="w-12 h-12 bg-siac-accent rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.35)]">
               <ShieldCheck className="text-industrial-950 w-8 h-8" />
             </div>
             <h1 className="text-4xl font-bold tracking-tighter text-white">SIAC</h1>
@@ -1959,7 +1977,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
               Sistema Inteligente <br />
               <span className="text-siac-accent">de Monitoreo</span>
             </h2>
-            <p className="text-gray-400 text-base md:text-lg max-w-sm mx-auto md:mx-0">
+            <p className="text-gray-300 text-base md:text-lg max-w-sm mx-auto md:mx-0">
               Arquitectura de seguridad avanzada para activos industriales críticos.
             </p>
           </div>
@@ -1983,7 +2001,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
 
         <motion.div 
           className="bg-[rgba(30,42,66,0.7)] backdrop-blur-[8px] border border-white/10 p-8 rounded-2xl shadow-2xl relative group"
-          whileHover={{ borderColor: 'rgba(77,196,147,0.35)' }}
+          whileHover={{ borderColor: 'rgba(34,211,238,0.35)' }}
         >
           <div className="absolute -top-4 -right-4 w-24 h-24 bg-siac-accent/5 blur-3xl rounded-full" />
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -1997,7 +2015,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
                 <input 
                   type="text" 
                   defaultValue="admin@siac.mx"
-                  className="w-full bg-industrial-950/35 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-siac-accent/50 transition-colors" 
+                  className="w-full bg-industrial-950/35 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-300 focus:outline-none focus:border-siac-accent/50 transition-colors" 
                 />
               </div>
             </div>
@@ -2008,7 +2026,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
                 <input 
                   type="password" 
                   defaultValue="password"
-                  className="w-full bg-industrial-950/35 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-siac-accent/50 transition-colors" 
+                  className="w-full bg-industrial-950/35 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-300 focus:outline-none focus:border-siac-accent/50 transition-colors" 
                 />
               </div>
             </div>
@@ -2065,9 +2083,9 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
               className="pointer-events-none"
             >
               <div className="bg-[rgba(30,42,66,0.7)] backdrop-blur-[8px] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-                <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: '3px solid #4DC493' }}>
+                <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: '3px solid #22D3EE' }}>
                   <div className="flex-1">
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">Notificación</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Notificación</div>
                     <div className="mt-0.5 text-xs font-bold text-white">Correo copiado al portapapeles</div>
                   </div>
                 </div>
@@ -2110,7 +2128,7 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
             <Sparkline data={kpi.data || []} colorHex={hex} />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 truncate">{kpi.label}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300 truncate">{kpi.label}</span>
             <div className={cn(
               "w-1.5 h-1.5 rounded-full",
               kpi.status === 'ALERTA' ? "bg-siac-blocked" : kpi.status === 'AVISO' ? "bg-siac-disarmed" : "bg-siac-accent"
@@ -2245,7 +2263,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
           <button 
             onClick={handleSearch}
             disabled={isSearching}
-            className="bg-siac-accent hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center shadow-[0_0_15px_rgba(77,196,147,0.2)]"
+            className="bg-siac-accent hover:brightness-110 text-industrial-950 px-8 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center shadow-[0_0_15px_rgba(34,211,238,0.2)]"
           >
             {isSearching ? (
               <>
@@ -2302,10 +2320,10 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                     {donutData.map((data, idx) => (
                       <motion.div 
                         key={idx} 
-                        whileHover={{ scale: 1.02, borderColor: 'rgba(77,196,147,0.3)' }}
+                        whileHover={{ scale: 1.02, borderColor: 'rgba(34,211,238,0.3)' }}
                         className="bg-industrial-950/50 border border-white/5 rounded-xl p-6 flex flex-col items-center group transition-all shadow-lg hover:shadow-siac-accent/5"
                       >
-                        <span className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-wider">{data.title}</span>
+                        <span className="text-xs font-bold text-gray-300 mb-6 uppercase tracking-wider">{data.title}</span>
                         <div className="w-32 h-32 relative">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -2393,7 +2411,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                               <Line 
                                 type="monotone" 
                                 dataKey="val" 
-                                stroke="#4DC493" 
+                                stroke="#22D3EE" 
                                 strokeWidth={2} 
                                 dot={false} 
                               />
@@ -2407,7 +2425,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                           <div className="p-1.5 bg-siac-blocked/10 rounded-lg">
                             <AlertTriangle className="w-3 h-3 text-siac-blocked" />
                           </div>
-                          <span className="text-[10px] text-gray-400 font-bold uppercase">Incidencias Críticas</span>
+                          <span className="text-[10px] text-gray-300 font-bold uppercase">Incidencias Críticas</span>
                         </div>
                         <span className="text-xs font-bold text-siac-blocked">+12% vs sem. ant.</span>
                       </div>
@@ -2429,7 +2447,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                               <Line 
                                 type="monotone" 
                                 dataKey="val" 
-                                stroke="#4DC493" 
+                                stroke="#22D3EE" 
                                 strokeWidth={2} 
                                 dot={false} 
                               />
@@ -2443,7 +2461,7 @@ const ReportsView = ({ isSearching, setIsSearching }: { isSearching: boolean, se
                           <div className="p-1.5 bg-siac-accent/10 rounded-lg">
                             <Clock className="w-3 h-3 text-siac-accent" />
                           </div>
-                          <span className="text-[10px] text-gray-400 font-bold uppercase">Eficiencia Operativa</span>
+                          <span className="text-[10px] text-gray-300 font-bold uppercase">Eficiencia Operativa</span>
                         </div>
                         <span className="text-xs font-bold text-siac-accent">ÓPTIMO</span>
                       </div>
@@ -2567,7 +2585,7 @@ const InteractiveMapView = () => {
           {renderIcon(sensor.tipo, "siac-accent")}
           <span className="text-xs font-bold text-white uppercase">{sensor.label}</span>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+        <button onClick={onClose} className="text-gray-300 hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -2588,11 +2606,11 @@ const InteractiveMapView = () => {
         
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-industrial-950/30 p-2 rounded-lg">
-            <div className="text-[8px] text-gray-500 uppercase font-bold">Estado</div>
+            <div className="text-[8px] text-gray-300 uppercase font-bold">Estado</div>
             <div className="text-[10px] font-bold text-siac-accent uppercase">{sensor.estado}</div>
           </div>
           <div className="bg-industrial-950/30 p-2 rounded-lg">
-            <div className="text-[8px] text-gray-500 uppercase font-bold">Tendencia</div>
+            <div className="text-[8px] text-gray-300 uppercase font-bold">Tendencia</div>
             <div className="text-[10px] font-bold text-white uppercase">+12.5%</div>
           </div>
         </div>
@@ -2675,7 +2693,7 @@ const InteractiveMapView = () => {
           {Object.entries(statusColors).map(([status, color]) => (
             <div key={status} className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }} />
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{status}</span>
+              <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tight">{status}</span>
             </div>
           ))}
         </div>
@@ -2727,13 +2745,15 @@ const InteractiveMapView = () => {
                     <div className="w-2 h-2 rounded-full bg-siac-accent animate-pulse" />
                     <span className="text-[10px] font-mono text-siac-accent font-bold tracking-widest uppercase">REC • {selectedCamera.label}</span>
                   </div>
-                  <span className="text-[8px] font-mono text-gray-400">CAM_ID: {selectedCamera.id} | 2026-04-26</span>
+                  <span className="text-[8px] font-mono text-gray-300">CAM_ID: {selectedCamera.id} | 2026-04-26</span>
                 </div>
               </div>
 
               <div className="p-4 bg-industrial-950/80 backdrop-blur-md flex items-center justify-between border-t border-white/5">
                 <div className="flex gap-4">
                   <div className="flex flex-col">
+                    <span className="text-[8px] text-gray-300 uppercase font-bold">Ubicación</span>
+                    <span className="text-[10px] font-bold text-white uppercase">{selectedCamera.label}</span>
                     <span className="text-[8px] text-gray-500 uppercase font-bold">Ubicación</span>
                     <span className="text-[10px] text-white font-bold">{selectedCamera.label}</span>
                   </div>
@@ -2801,13 +2821,13 @@ const InteractiveMapView = () => {
               <tbody className="text-[11px] font-bold">
                 {alarms.map((alarm, idx) => (
                   <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-all group">
-                    <td className="py-4 px-4 font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.fecha}</td>
+                    <td className="py-4 px-4 font-mono text-gray-300 group-hover:text-white transition-colors">{alarm.fecha}</td>
                     <td className="py-4 px-4">
                       <span className={cn(
                         "inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-wider transition-all",
                         alarm.estado === 'Pendiente' 
                           ? "border-orange-500/30 text-orange-500 bg-orange-500/5 shadow-[0_0_10px_rgba(249,115,22,0.1)]" 
-                          : "border-siac-accent/30 text-siac-accent bg-siac-accent/5 shadow-[0_0_10px_rgba(77,196,147,0.1)]"
+                          : "border-siac-accent/30 text-siac-accent bg-siac-accent/5 shadow-[0_0_10px_rgba(34,211,238,0.12)]"
                       )}>
                         <div className={cn("w-1.5 h-1.5 rounded-full", alarm.estado === 'Pendiente' ? "bg-orange-500" : "bg-siac-accent")} />
                         {alarm.estado}
@@ -2973,7 +2993,7 @@ const Dashboard = () => {
     return (
       <div className="relative group flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-siac-armed animate-pulse" />
-        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300">
           En vivo · Actualizado hace {seconds}s
         </span>
         <div className="absolute left-0 top-full mt-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
@@ -3006,7 +3026,7 @@ const Dashboard = () => {
               <div className="bg-card/85 backdrop-blur-md border border-border-card rounded-xl shadow-2xl overflow-hidden">
                 <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: `3px solid ${t.color}` }}>
                   <div className="flex-1">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.title}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-300">{t.title}</div>
                     <div className="mt-0.5 text-xs font-bold text-white">{t.message}</div>
                   </div>
                   <div className="w-2 h-2 rounded-full mt-1.5" style={{ background: t.color }} />
@@ -3023,7 +3043,7 @@ const Dashboard = () => {
           "fixed bottom-5 right-5 z-[65] px-5 py-3 rounded-full border font-bold uppercase tracking-widest text-[10px] shadow-2xl transition-all flex items-center gap-2",
           isDemoMode
             ? "bg-siac-blocked border-siac-blocked text-industrial-950 hover:brightness-110 shadow-[0_0_20px_rgba(245,30,30,0.3)]"
-            : "bg-siac-accent border-siac-accent text-industrial-950 hover:brightness-110 shadow-[0_0_20px_rgba(77,196,147,0.3)]"
+            : "bg-siac-accent border-siac-accent text-industrial-950 hover:brightness-110 shadow-[0_0_20px_rgba(34,211,238,0.3)]"
         )}
       >
         {isDemoMode ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -3065,7 +3085,7 @@ const Dashboard = () => {
 
         <div className="px-4 pt-4">
           <motion.div
-            whileHover={{ x: 2, boxShadow: '0 0 18px rgba(77,196,147,0.25)' }}
+            whileHover={{ x: 2, boxShadow: '0 0 18px rgba(34,211,238,0.25)' }}
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
             className="rounded-xl bg-white/5 backdrop-blur-md border border-white/10 px-3 py-2"
           >
@@ -3078,7 +3098,7 @@ const Dashboard = () => {
               >
                 <div className="text-[11px] tracking-wider text-white truncate">
                   <span className="font-semibold">Leandro Balbian</span>{' '}
-                  <span className="opacity-60">— Product Designer</span>
+                  <span className="text-gray-300">— Product Designer</span>
                 </div>
               </a>
 
@@ -3086,8 +3106,8 @@ const Dashboard = () => {
                 href="https://www.linkedin.com/in/leodisenofreelance"
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 p-2 rounded-lg border border-white/10 bg-card/30 text-gray-400"
-                whileHover={{ scale: 1.2, color: '#4DC493', borderColor: 'rgba(77,196,147,0.35)' }}
+                className="shrink-0 p-2 rounded-lg border border-white/10 bg-card/30 text-gray-300"
+                whileHover={{ scale: 1.2, color: '#22D3EE', borderColor: 'rgba(34,211,238,0.35)' }}
                 transition={{ type: 'spring', stiffness: 520, damping: 26 }}
                 aria-label="LinkedIn"
               >
@@ -3238,7 +3258,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-6">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 text-gray-400 hover:text-white md:hidden"
+              className="p-2 text-gray-300 hover:text-white md:hidden"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -3696,13 +3716,13 @@ const Dashboard = () => {
                   </h3>
                   <div className="bg-card border border-white/5 rounded-2xl overflow-hidden flex flex-col h-auto max-h-[400px] xl:max-h-none xl:h-[calc(100%-40px)]">
                     <div className="p-4 border-b border-white/5 bg-industrial-800/30">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Estado de Zonas</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-gray-300">Estado de Zonas</h4>
                     </div>
                     <div className="flex-1 overflow-y-auto">
                       {pins?.map((pin, i) => (
                         <div key={pin.id || i} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
                           <div className="flex flex-col">
-                            <span className="font-mono text-[10px] text-gray-500">{pin.id || 'N/A'}</span>
+                            <span className="font-mono text-[10px] text-gray-300">{pin.id || 'N/A'}</span>
                             <span className="font-bold text-xs">{pin.nombre || 'Sin nombre'}</span>
                           </div>
                           <div className="flex justify-center">
@@ -3721,15 +3741,15 @@ const Dashboard = () => {
                               {(pin.estado || 'DESCONOCIDO').toUpperCase()}
                             </div>
                           </div>
-                          <span className="text-right text-[10px] text-gray-500 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
+                          <span className="text-right text-[10px] text-gray-300 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
                         </div>
                       ))}
                     </div>
                     <div className="p-4 bg-industrial-800/20 border-t border-white/5 flex justify-between items-center text-xs shrink-0">
-                      <span className="text-gray-500">Total: {pins?.length || 0} dispositivos</span>
+                      <span className="text-gray-300">Total: {pins?.length || 0} dispositivos</span>
                       <div className="flex gap-1">
-                        <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">1</button>
-                        <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-500 hover:text-white">2</button>
+                        <button className="w-6 h-6 rounded bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white">1</button>
+                        <button className="w-6 h-6 rounded hover:bg-industrial-800 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white">2</button>
                       </div>
                     </div>
                   </div>
@@ -3744,7 +3764,7 @@ const Dashboard = () => {
                     </h3>
                     <div className="flex items-center gap-2 md:gap-4">
                       <div className="relative flex-1 sm:flex-initial">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                         <input 
                           type="text" 
                           placeholder="Buscar evento..." 
@@ -3752,7 +3772,11 @@ const Dashboard = () => {
                         />
                       </div>
                       <button
-                        onClick={() => runSimulatedAction(setExportState)}
+                        onClick={() => runSimulatedAction(setExportState, () => {
+                          const toastId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                          setToasts((t) => [{ id: toastId, title: 'Reporte', message: 'Reporte generado con éxito', color: '#22D3EE' }, ...t].slice(0, 4));
+                          setTimeout(() => setToasts((t) => t.filter((x: any) => x.id !== toastId)), 2800);
+                        })}
                         disabled={exportState === 'loading'}
                         className={cn(
                           "bg-siac-armed text-industrial-950 px-3 md:px-4 py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all inline-flex items-center gap-2",
@@ -3779,7 +3803,7 @@ const Dashboard = () => {
                             "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border",
                             activeFilter === f 
                               ? "bg-siac-armed text-industrial-950 border-siac-armed" 
-                              : "bg-industrial-800 text-gray-400 border-white/5 hover:border-gray-600"
+                              : "bg-industrial-800 text-gray-300 border-white/5 hover:border-gray-600"
                           )}
                         >
                           {f}
@@ -3790,7 +3814,7 @@ const Dashboard = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-white/5 text-[10px] font-bold uppercase tracking-wider opacity-60 text-white">
+                          <tr className="border-b border-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-300">
                             <th className="px-6 py-4">Evento ID</th>
                             <th className="px-6 py-4">Fecha / Hora</th>
                             <th className="px-6 py-4">Dispositivo</th>
