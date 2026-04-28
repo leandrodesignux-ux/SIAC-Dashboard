@@ -84,6 +84,26 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const LinkedinIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="4" />
+      <path d="M7 10v7" />
+      <path d="M7 7.5v.5" />
+      <path d="M11 10v7" />
+      <path d="M11 13.2c0-2 3-2.2 3-0.2V17" />
+    </svg>
+  );
+};
+
 const tokenToHex = (token: string) => {
   const t = String(token || '').replace(/^text-/, '').replace(/^bg-/, '').replace(/^border-/, '');
   if (t === 'siac-accent' || t === 'siac-active') return '#4DC493';
@@ -3105,7 +3125,49 @@ const Dashboard = () => {
           </button>
         </nav>
 
-        <div className="p-4 border-t border-industrial-800">
+        <div className="p-4 border-t border-industrial-800 space-y-3">
+          <motion.div
+            whileHover={{ x: 2, boxShadow: '0 0 18px rgba(77,196,147,0.25)' }}
+            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+            className="rounded-xl bg-white/5 backdrop-blur-md border border-white/10 p-3"
+          >
+            <div className="flex items-center gap-2">
+              <motion.a
+                href="https://www.linkedin.com/in/leodisenofreelance"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 min-w-0 flex items-center gap-2"
+              >
+                <div className="min-w-0">
+                  <div className="text-[11px] tracking-wider text-white truncate">
+                    <span className="font-semibold">Leandro Balbian</span>{' '}
+                    <span className="opacity-60">— Product Designer</span>
+                  </div>
+                </div>
+              </motion.a>
+
+              <motion.a
+                href="https://www.linkedin.com/in/leodisenofreelance"
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 p-2 rounded-lg border border-white/10 bg-card/30 text-gray-400"
+                whileHover={{ scale: 1.2, color: '#4DC493', borderColor: 'rgba(77,196,147,0.35)' }}
+                transition={{ type: 'spring', stiffness: 520, damping: 26 }}
+                aria-label="LinkedIn"
+              >
+                <LinkedinIcon className="w-4 h-4" />
+              </motion.a>
+
+              <button
+                disabled
+                className="shrink-0 px-3 py-2 rounded-lg text-[11px] tracking-wider uppercase border border-white/10 bg-card/20 text-white/40 cursor-not-allowed"
+                aria-label="Portafolio (próximamente)"
+              >
+                Portafolio
+              </button>
+            </div>
+          </motion.div>
+
           <button 
             onClick={() => window.location.reload()}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-siac-blocked hover:bg-siac-blocked/5 rounded-lg font-medium transition-all group"
