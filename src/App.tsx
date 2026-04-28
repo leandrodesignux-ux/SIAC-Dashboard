@@ -557,7 +557,7 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                   key={alarm.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: Math.min(i, 8) * 0.03 }}
                   className={cn(
                     "group border-b border-border-card transition-colors",
                     alarm.color === '#FAD92A' ? "bg-[rgba(250,217,42,0.04)]" : alarm.color === '#F51E1E' ? "bg-[rgba(245,30,30,0.04)]" : "hover:bg-card/50"
@@ -566,9 +566,9 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                     borderLeft: alarm.color === '#FAD92A' ? '3px solid #FAD92A' : alarm.color === '#F51E1E' ? '3px solid #F51E1E' : undefined,
                   }}
                 >
-                  <td className="px-6 py-4 text-xs font-mono text-gray-300 group-hover:text-white transition-colors">{alarm.id}</td>
-                  <td className="px-6 py-4 text-xs font-mono text-gray-300 group-hover:text-white transition-colors">{alarm.timestamp}</td>
-                  <td className="px-6 py-4 text-xs font-bold text-white uppercase">{alarm.activo}</td>
+                  <td className="px-6 py-4 text-[11px] font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.id}</td>
+                  <td className="px-6 py-4 text-[11px] font-mono text-gray-400 group-hover:text-white transition-colors">{alarm.timestamp}</td>
+                  <td className="px-6 py-4 text-[13px] font-medium text-white">{alarm.activo}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex p-1.5 bg-card rounded-lg text-gray-300 group-hover:text-siac-accent transition-colors">
                       {renderIcon(alarm.tipo)}
@@ -643,14 +643,15 @@ const AlarmsView = ({ onNavigateToMap }: { onNavigateToMap: () => void }) => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center border-2 shrink-0"
-                      style={{ borderColor: selectedAlarm.color, backgroundColor: `${selectedAlarm.color}10` }}
+                      className="p-2 rounded-xl bg-card border border-white/5" 
+                      style={{ color: selectedAlarm.color }}
                     >
                       {renderIcon(selectedAlarm.tipo)}
                     </div>
                     <div className="space-y-2">
-                      <div className="text-xs font-bold text-white uppercase tracking-widest truncate">{selectedAlarm.id}</div>
-                      <div className="text-[10px] font-mono text-gray-300 truncate">Timestamp: {selectedAlarm.timestamp}</div>
+                      <div className="text-[13px] font-medium text-white truncate">{selectedAlarm.activo}</div>
+                      <div className="text-[12px] font-normal text-gray-300 truncate">{selectedAlarm.severidad}</div>
+                      <div className="text-[11px] font-mono text-gray-400 truncate">{selectedAlarm.id} • {selectedAlarm.timestamp}</div>
                     </div>
                   </div>
 
@@ -3720,10 +3721,10 @@ const Dashboard = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                       {pins?.map((pin, i) => (
-                        <div key={pin.id || i} className="p-4 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center text-sm">
-                          <div className="flex flex-col">
+                        <div key={pin.id || i} className="px-4 py-3 border-b border-white/5 hover:bg-industrial-800/50 transition-colors grid grid-cols-3 items-center">
+                          <div className="flex flex-col leading-tight">
                             <span className="font-mono text-[10px] text-gray-300">{pin.id || 'N/A'}</span>
-                            <span className="font-bold text-xs">{pin.nombre || 'Sin nombre'}</span>
+                            <span className="text-[13px] font-medium text-white">{pin.nombre || 'Sin nombre'}</span>
                           </div>
                           <div className="flex justify-center">
                             <div className={cn(
@@ -3741,7 +3742,7 @@ const Dashboard = () => {
                               {(pin.estado || 'DESCONOCIDO').toUpperCase()}
                             </div>
                           </div>
-                          <span className="text-right text-[10px] text-gray-300 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
+                          <span className="text-right text-[11px] text-gray-400 font-mono">16:32:{i < 10 ? `0${i}` : i} PM</span>
                         </div>
                       ))}
                     </div>
@@ -3847,8 +3848,8 @@ const Dashboard = () => {
                                     : undefined,
                               }}
                             >
-                              <td className="px-6 py-4 font-mono text-gray-400">#EV-{alarm.id}024</td>
-                              <td className="px-6 py-4 text-gray-300">{alarm.fecha}</td>
+                              <td className="px-6 py-4 text-[11px] font-mono text-gray-400">#EV-{alarm.id}024</td>
+                              <td className="px-6 py-4 text-[11px] font-mono text-gray-400">{alarm.fecha}</td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-2">
                                   <div className="p-1.5 bg-industrial-800 rounded-lg border border-white/5">
@@ -3858,7 +3859,7 @@ const Dashboard = () => {
                                     {alarm.tipo === 'GW' && <Cpu className="w-3 h-3" />}
                                     {alarm.tipo === 'Activo' && <Activity className="w-3 h-3" />}
                                   </div>
-                                  <span className="font-bold">{alarm.dispositivo}</span>
+                                  <span className="text-[13px] font-medium text-white">{alarm.dispositivo}</span>
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-center">
@@ -3872,8 +3873,8 @@ const Dashboard = () => {
                                   {alarm.estado}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-gray-400">{alarm.ubicacion}</td>
-                              <td className="px-6 py-4 text-gray-300 italic">"{alarm.descripcion}"</td>
+                              <td className="px-6 py-4 text-[11px] font-mono text-gray-400">{alarm.ubicacion}</td>
+                              <td className="px-6 py-4 text-[12px] font-normal text-gray-300">{alarm.descripcion}</td>
                               <td className="px-6 py-4 text-right">
                                 <button className="text-siac-armed text-[10px] font-bold hover:underline">Ver</button>
                               </td>
