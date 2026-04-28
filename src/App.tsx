@@ -2099,9 +2099,15 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   );
 };
 
-const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick: () => void }) => {
+const KPICard = ({ kpi, active, onClick, isDemoMode }: { kpi: KPI, active: boolean, onClick: () => void, isDemoMode: boolean }) => {
   const Icon = kpi.icon;
   const hex = tokenToHex(kpi.color);
+  const [shimmerKey, setShimmerKey] = useState(0);
+
+  useEffect(() => {
+    if (!isDemoMode) return;
+    setShimmerKey((k) => k + 1);
+  }, [isDemoMode, kpi.value]);
   return (
     <motion.div 
       whileHover={{ y: -4 }}
@@ -2112,6 +2118,22 @@ const KPICard = ({ kpi, active, onClick }: { kpi: KPI, active: boolean, onClick:
       )}
       style={{ borderTopColor: hex }}
     >
+      <AnimatePresence>
+        {isDemoMode && (
+          <motion.div
+            key={shimmerKey}
+            initial={{ x: '-120%', opacity: 0 }}
+            animate={{ x: '120%', opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="absolute inset-y-0 -inset-x-1/2 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
       <div className="flex items-center gap-4">
         <div className={cn(
           "p-3 rounded-full flex items-center justify-center shrink-0 transition-colors",
@@ -2888,6 +2910,8 @@ const Dashboard = () => {
   const [lastUpdatedAt, setLastUpdatedAt] = useState(() => Date.now());
   const [hoveredPinId, setHoveredPinId] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isMapHover, setIsMapHover] = useState(false);
+  const [mapCursor, setMapCursor] = useState({ x: 0, y: 0 });
   const [toasts, setToasts] = useState<any[]>([]);
   const [exportState, setExportState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [kpis, setKpis] = useState<any[]>(() => ([
@@ -3459,6 +3483,7 @@ const Dashboard = () => {
                     key={kpi.id} 
                     kpi={kpi} 
                     active={activeFilter === kpi.id} 
+                    isDemoMode={isDemoMode}
                     onClick={() => setActiveFilter(activeFilter === kpi.id ? 'Todos' : kpi.id)}
                   />
                 ))}
@@ -3476,7 +3501,55 @@ const Dashboard = () => {
                     </button>
                   </div>
                   
-                  <div className="aspect-video bg-card rounded-2xl border border-white/5 relative overflow-hidden group">
+                  <div
+                    className={cn(
+                      "aspect-video bg-card rounded-2xl border border-white/5 relative overflow-hidden group",
+                      isMapHover ? "cursor-none" : "cursor-default"
+                    )}
+                    onMouseEnter={() => setIsMapHover(true)}
+                    onMouseLeave={() => setIsMapHover(false)}
+                    onMouseMove={(e) => {
+                      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                      setMapCursor({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                    }}
+                  >
+                    {isMapHover && (
+                      <div
+                        className="absolute inset-0 z-[60] pointer-events-none"
+                        aria-hidden="true"
+                      >
+                        {hoveredPinId ? (
+                          <motion.div
+                            className="absolute"
+                            style={{ left: mapCursor.x, top: mapCursor.y, transform: 'translate(-50%, -50%)' }}
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2.2, ease: 'linear', repeat: Infinity }}
+                          >
+                            <svg width="30" height="30" viewBox="0 0 30 30">
+                              <circle cx="15" cy="15" r="10" fill="none" stroke="#22D3EE" strokeWidth="1.5" opacity="0.9" />
+                              <circle cx="15" cy="15" r="3" fill="none" stroke="#22D3EE" strokeWidth="1.5" opacity="0.9" />
+                              <path d="M15 0 V6" stroke="#22D3EE" strokeWidth="1.5" />
+                              <path d="M15 24 V30" stroke="#22D3EE" strokeWidth="1.5" />
+                              <path d="M0 15 H6" stroke="#22D3EE" strokeWidth="1.5" />
+                              <path d="M24 15 H30" stroke="#22D3EE" strokeWidth="1.5" />
+                            </svg>
+                          </motion.div>
+                        ) : (
+                          <div
+                            className="absolute"
+                            style={{ left: mapCursor.x, top: mapCursor.y, transform: 'translate(-50%, -50%)' }}
+                          >
+                            <svg width="26" height="26" viewBox="0 0 26 26">
+                              <circle cx="13" cy="13" r="9" fill="none" stroke="#22D3EE" strokeWidth="1.5" opacity="0.85" />
+                              <path d="M13 0 V6" stroke="#22D3EE" strokeWidth="1.5" />
+                              <path d="M13 20 V26" stroke="#22D3EE" strokeWidth="1.5" />
+                              <path d="M0 13 H6" stroke="#22D3EE" strokeWidth="1.5" />
+                              <path d="M20 13 H26" stroke="#22D3EE" strokeWidth="1.5" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {/* Blueprint / Technical Grid Background */}
                     <div className="absolute inset-0 opacity-20 pointer-events-none" 
                       style={{ 
@@ -3544,6 +3617,27 @@ const Dashboard = () => {
                           </div>
 
                           <div className="relative">
+                            {(pin.estado === 'Alarmado' || pin.estado === 'Bloqueado') && (
+                              <motion.svg
+                                width="56"
+                                height="56"
+                                viewBox="0 0 56 56"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                                initial={{ scale: 1, opacity: 1 }}
+                                animate={{ scale: 2, opacity: 0 }}
+                                transition={{ duration: 1.5, ease: 'easeOut', repeat: Infinity }}
+                              >
+                                <circle
+                                  cx="28"
+                                  cy="28"
+                                  r="12"
+                                  fill="none"
+                                  stroke={pin.estado === 'Alarmado' ? '#FAD92A' : '#F51E1E'}
+                                  strokeWidth="2"
+                                  opacity="0.8"
+                                />
+                              </motion.svg>
+                            )}
                             {(pin.estado === 'Alarmado' || pin.estado === 'Bloqueado') && (
                               <div className={cn(
                                 "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full animate-pulse",
